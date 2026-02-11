@@ -2,404 +2,210 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eldoria: A Saga Infinita</title>
+    <title>Eldoria: Crônicas de Sangue</title>
     <style>
-        /* --- ESTILO VISUAL (DARK FANTASY) --- */
-        :root { --bg: #050505; --panel: #111; --border: #333; --accent: #ffcc00; --danger: #ff4444; --success: #4caf50; --text: #e0e0e0; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; height: 100vh; overflow: hidden; display: flex; }
+        :root { --bg: #050505; --panel: #111; --accent: #ffcc00; --danger: #ff4444; --success: #2ecc71; }
+        body { background: var(--bg); color: #eee; font-family: 'Cinzel', serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        /* LAYOUT */
-        #game-container { display: flex; width: 100%; height: 100%; }
-        #main-stage { flex: 3; padding: 30px; display: flex; flex-direction: column; overflow-y: auto; position: relative; }
-        #sidebar { flex: 1; min-width: 320px; background: var(--panel); border-left: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; overflow-y: auto; box-shadow: -5px 0 20px rgba(0,0,0,0.5); }
-
-        /* CENA */
-        #scene-image { width: 100%; height: 380px; object-fit: cover; border-radius: 8px; border: 1px solid #444; margin-bottom: 20px; background: #000; transition: opacity 0.5s; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
+        /* ANIMAÇÕES */
+        @keyframes shake { 0% { transform: translate(1px, 1px); } 20% { transform: translate(-3px, 0px); } 40% { transform: translate(3px, 2px); } 100% { transform: translate(0,0); } }
+        .shake { animation: shake 0.5s; }
         
-        /* BOTÕES DE AÇÃO */
-        .btn { background: #1a1a1a; color: #ccc; border: 1px solid #333; padding: 16px; margin: 8px 0; width: 100%; cursor: pointer; border-radius: 6px; text-align: left; font-size: 16px; transition: 0.2s; position: relative; }
-        .btn:hover:not(:disabled) { background: #252525; border-color: var(--accent); color: white; padding-left: 25px; }
-        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .btn-shop { border-color: var(--success); color: var(--success); font-weight: bold; }
-        .btn-shop:hover { background: #0a2e14; box-shadow: 0 0 15px rgba(76, 175, 80, 0.2); }
-
-        /* LOJA (OVERLAY) */
-        #shop-modal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; flex-direction: column; padding: 40px; box-sizing: border-box; backdrop-filter: blur(5px); }
-        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; height: 80%; }
-        .shop-col { background: #111; border: 1px solid #333; padding: 20px; overflow-y: auto; border-radius: 8px; }
-        .shop-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #222; font-size: 0.9em; }
-        .close-shop { align-self: flex-end; background: var(--danger); color: white; border: none; padding: 10px 25px; cursor: pointer; border-radius: 5px; font-weight: bold; margin-bottom: 20px; }
-
-        /* STATS LATERAL */
-        .stat-group { background: #181818; padding: 15px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #2a2a2a; }
-        .stat-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9em; color: #aaa; }
-        .stat-val { font-weight: bold; color: var(--accent); }
+        #game-container { display: flex; width: 100%; }
+        #main-stage { flex: 3; padding: 20px; display: flex; flex-direction: column; align-items: center; position: relative; }
         
-        #game-log { margin-top: auto; height: 180px; overflow-y: auto; font-family: monospace; font-size: 0.8em; color: #777; border-top: 1px solid #333; padding-top: 10px; }
-        .log-entry { margin-bottom: 4px; border-bottom: 1px solid #1a1a1a; padding-bottom: 2px; }
-        .log-success { color: var(--success); } .log-fail { color: var(--danger); } .log-loot { color: #d4af37; }
+        /* IMAGEM REAL */
+        #scene-image { width: 90%; height: 400px; object-fit: cover; border: 2px solid #333; border-radius: 5px; box-shadow: 0 0 20px #000; }
 
-        /* MENU INICIAL */
-        #menu-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; background-image: url('https://image.pollinations.ai/prompt/rpg%20world%20map%20dark%20fantasy?width=1280&height=720&nologo=true'); background-size: cover; }
-        .menu-box { background: rgba(10,10,10,0.92); padding: 40px; border: 1px solid var(--accent); border-radius: 10px; width: 400px; text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; background: #222; border: 1px solid #444; color: white; border-radius: 4px; box-sizing: border-box; }
-        .start-btn { width: 100%; padding: 15px; background: var(--accent); color: black; font-weight: bold; border: none; cursor: pointer; margin-top: 15px; border-radius: 4px; font-size: 1.1em; transition: 0.2s; }
-        .start-btn:hover { background: #ffdb4d; transform: scale(1.02); }
+        /* MENSAGEM DE IMPACTO */
+        #impact-overlay { position: absolute; top: 40%; font-size: 3em; font-weight: bold; text-shadow: 0 0 10px #000; display: none; z-index: 100; pointer-events: none; }
+
+        /* NARRATIVA */
+        #narrative-box { width: 90%; background: rgba(20,20,20,0.9); padding: 20px; border-radius: 5px; margin-top: -50px; border-top: 2px solid var(--accent); z-index: 10; }
+        .choices-grid { display: grid; grid-template-columns: 1fr; width: 90%; margin-top: 15px; }
+        .btn { background: #1a1a1a; color: #fff; border: 1px solid #444; padding: 15px; margin: 5px; cursor: pointer; transition: 0.3s; text-align: left; }
+        .btn:hover { background: #333; border-color: var(--accent); }
+
+        /* SIDEBAR */
+        #sidebar { flex: 1; background: var(--panel); border-left: 2px solid #222; padding: 20px; display: flex; flex-direction: column; }
+        .stat-row { display: flex; justify-content: space-between; border-bottom: 1px solid #222; padding: 8px 0; }
+        
+        /* INVENTÁRIO */
+        #inventory-list { flex: 1; overflow-y: auto; margin-top: 10px; }
+        .inv-item { background: #222; padding: 10px; margin-bottom: 5px; border-radius: 3px; font-size: 0.9em; display: flex; justify-content: space-between; }
+        .equip-btn { background: var(--accent); color: #000; border: none; padding: 3px 8px; border-radius: 2px; cursor: pointer; }
+
+        /* SHOP */
+        #shop-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; padding: 50px; }
     </style>
 </head>
 <body>
 
-    <div id="menu-screen">
-        <div class="menu-box">
-            <h1 style="color:white; margin:0 0 10px 0;">ELDORIA</h1>
-            <p style="color:#666; font-size:0.9em; margin-bottom:20px;">RPG Procedural v1.0</p>
-            <div id="loading-txt" style="color:var(--accent); font-weight:bold;">Conectando ao Google Sheets...</div>
-            
-            <div id="char-create" style="display:none;">
-                <input type="text" id="p-name" placeholder="Nome do Herói">
-                <label style="display:block; text-align:left; color:#888; font-size:0.8em; margin-top:10px;">Raça</label>
-                <select id="p-race"></select>
-                <label style="display:block; text-align:left; color:#888; font-size:0.8em; margin-top:10px;">Classe</label>
-                <select id="p-class">
-                    <option value="guerreiro">Guerreiro (+Força, +Vida)</option>
-                    <option value="mago">Mago (+Inteligência, +Mana)</option>
-                    <option value="ladino">Ladino (+Agilidade, +Sorte)</option>
-                </select>
-                <button onclick="Game.start()" class="start-btn">INICIAR AVENTURA</button>
-            </div>
-        </div>
+    <div id="menu-screen" style="position:fixed; inset:0; background:#000; z-index:2000; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+        <h1 style="color:var(--accent); font-size:4em;">ELDORIA</h1>
+        <button onclick="Game.init()" style="padding:20px 50px; font-size:1.5em; background:var(--accent); cursor:pointer;">INICIAR JORNADA</button>
     </div>
+
+    <div id="impact-overlay"></div>
 
     <div id="game-container">
         <div id="main-stage">
             <img id="scene-image" src="" alt="Cena">
-            
-            <div id="shop-modal">
-                <button class="close-shop" onclick="Shop.close()">FECHAR MERCADO ✖</button>
-                <h2 style="color:var(--accent); text-align:center; margin-bottom:30px;">MERCADOR ITINERANTE</h2>
-                <div class="shop-grid">
-                    <div class="shop-col">
-                        <h3 style="color:#fff; border-bottom:1px solid #333; padding-bottom:10px;">Comprar</h3>
-                        <div id="shop-stock"></div>
-                    </div>
-                    <div class="shop-col">
-                        <h3 style="color:#fff; border-bottom:1px solid #333; padding-bottom:10px;">Sua Mochila (Vender)</h3>
-                        <div id="shop-player"></div>
-                    </div>
-                </div>
-            </div>
-
             <div id="narrative-box">
-                <h2 id="scene-title" style="color:var(--accent);">...</h2>
-                <p id="scene-text" style="font-size: 1.15em; line-height: 1.6; color: #ccc; margin-bottom: 25px;"></p>
+                <h2 id="scene-title" style="margin:0; color:var(--accent)">Aguardando...</h2>
+                <p id="scene-text" style="line-height:1.6; font-size:1.1em;"></p>
             </div>
-            <div id="choices-area"></div>
+            <div id="choices-grid" class="choices-grid"></div>
         </div>
 
         <div id="sidebar">
-            <div class="stat-group">
-                <h3 id="ui-name" style="margin:0 0 10px 0; color:white;">Herói</h3>
-                <div class="stat-row"><span>Raça</span> <span id="ui-race">-</span></div>
-                <div class="stat-row"><span>Classe</span> <span id="ui-class">-</span></div>
-                <div class="stat-row"><span>Moral</span> <span id="ui-moral" style="color:white">0</span></div>
-                <div class="stat-row"><span>Ouro</span> <span id="ui-gold" style="color:gold;">50 G</span></div>
-            </div>
-
-            <div class="stat-group">
-                <div class="stat-row"><span>❤️ Vida</span> <span class="stat-val" id="ui-hp">-</span></div>
-                <div class="stat-row"><span>✨ Mana</span> <span class="stat-val" id="ui-mana">-</span></div>
-                <div class="stat-row"><span>⚔️ Ataque</span> <span class="stat-val" id="ui-atk">-</span></div>
-                <hr style="border-color:#333; margin:10px 0;">
-                <div class="stat-row"><span>💪 Força</span> <span id="ui-str">-</span></div>
-                <div class="stat-row"><span>🏃 Agil.</span> <span id="ui-agi">-</span></div>
-                <div class="stat-row"><span>🧠 Intel.</span> <span id="ui-int">-</span></div>
-            </div>
-
-            <h3 style="color:white; margin-bottom:10px;">Mochila</h3>
-            <div id="inventory-list" style="flex:1; overflow-y:auto; margin-bottom:20px;"></div>
-
-            <h3 style="color:white; margin-bottom:5px;">Diário</h3>
-            <div id="game-log"></div>
+            <h3 style="border-bottom:1px solid var(--accent)">HERÓI</h3>
+            <div class="stat-row"><span>❤️ Vida</span> <span id="ui-hp">100/100</span></div>
+            <div class="stat-row"><span>✨ Mana</span> <span id="ui-mana">50</span></div>
+            <div class="stat-row"><span>⚔️ Ataque</span> <span id="ui-atk">5</span></div>
+            <div class="stat-row"><span>💰 Ouro</span> <span id="ui-gold" style="color:gold">50</span></div>
+            <div class="stat-row"><span>🧬 Missão</span> <span id="ui-quest" style="color:var(--accent)">Prólogo</span></div>
+            
+            <h3 style="margin-top:20px;">🎒 INVENTÁRIO</h3>
+            <div id="inventory-list"></div>
+            
+            <div id="game-log" style="height:150px; overflow-y:auto; font-size:0.8em; color:#666; margin-top:auto; border-top:1px solid #333; padding-top:10px;"></div>
         </div>
     </div>
 
 <script>
-// --- CONFIGURAÇÃO (SEUS LINKS NOVOS) ---
-const SHEET_LINKS = {
+// LINKS DA PLANILHA (Mantenha os mesmos)
+const SHEETS = {
     EVENTOS: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQYBgyb8dCSFIKTq84xLLYow8OXHiYph-PP-nb_8CsLJodJz38rZiFM4mB6FPCoiw1zDPjoFaH9Ju_6/pub?gid=1744997815&single=true&output=csv",
-    RACAS: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQYBgyb8dCSFIKTq84xLLYow8OXHiYph-PP-nb_8CsLJodJz38rZiFM4mB6FPCoiw1zDPjoFaH9Ju_6/pub?gid=295311780&single=true&output=csv",
     ITENS: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQYBgyb8dCSFIKTq84xLLYow8OXHiYph-PP-nb_8CsLJodJz38rZiFM4mB6FPCoiw1zDPjoFaH9Ju_6/pub?gid=1410748440&single=true&output=csv",
+    RACAS: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQYBgyb8dCSFIKTq84xLLYow8OXHiYph-PP-nb_8CsLJodJz38rZiFM4mB6FPCoiw1zDPjoFaH9Ju_6/pub?gid=295311780&single=true&output=csv",
     VILOES: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQYBgyb8dCSFIKTq84xLLYow8OXHiYph-PP-nb_8CsLJodJz38rZiFM4mB6FPCoiw1zDPjoFaH9Ju_6/pub?gid=530389116&single=true&output=csv"
 };
 
-// --- ESTADO GLOBAL ---
-const DB = {};
-const Player = {
-    name: "", race: {}, class: "", villain: {},
-    stats: { hp: 100, maxHp: 100, mana: 50, atk: 5, str: 10, agi: 10, int: 10 },
-    inventory: [], gold: 50, moral: 0, act: 1, flags: {}
+let DB = {};
+let player = { 
+    hp: 100, maxHp: 100, mana: 50, atk: 5, gold: 50, 
+    inventory: [], equipped: null, nextEventId: "101" 
 };
 
-// --- 1. ENGINE (CARREGADOR) ---
-const Loader = {
-    init: async () => {
-        try {
-            const promises = Object.keys(SHEET_LINKS).map(key => 
-                fetch(SHEET_LINKS[key]).then(r => r.text()).then(txt => DB[key] = Loader.parseCSV(txt))
-            );
-            await Promise.all(promises);
-            Loader.setupMenu();
-        } catch (e) {
-            document.getElementById('loading-txt').innerText = "ERRO: Não foi possível baixar a planilha.";
-            console.error(e);
-        }
-    },
-    parseCSV: (text) => {
-        const lines = text.split("\n").filter(l => l.trim() !== "");
-        const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
-        return lines.slice(1).map(line => {
-            const vals = []; let inQuote = false; let val = "";
-            for (let char of line) {
-                if (char === '"') inQuote = !inQuote;
-                else if (char === ',' && !inQuote) { vals.push(val.trim()); val = ""; }
-                else val += char;
-            }
-            vals.push(val.trim());
-            return headers.reduce((obj, h, i) => { obj[h] = vals[i] || ""; return obj; }, {});
-        });
-    },
-    setupMenu: () => {
-        document.getElementById('loading-txt').style.display = 'none';
-        document.getElementById('char-create').style.display = 'block';
-        const sel = document.getElementById('p-race');
-        DB.RACAS.forEach((r, i) => {
-            const opt = document.createElement('option');
-            opt.value = i; opt.innerText = r.nome; sel.appendChild(opt);
-        });
-    }
-};
-
-// --- 2. JOGO PRINCIPAL ---
 const Game = {
-    start: () => {
-        Player.name = document.getElementById('p-name').value || "Viajante";
-        Player.race = DB.RACAS[document.getElementById('p-race').value];
-        Player.class = document.getElementById('p-class').value;
-        
-        // Aplica Bônus de Raça
-        Player.stats.maxHp += parseInt(Player.race.bonus_vida || 0);
-        Player.stats.hp = Player.stats.maxHp;
-        Player.stats.mana += parseInt(Player.race.bonus_mana || 0);
-        Player.stats.atk += parseInt(Player.race.bonus_ataque || 0);
-        
-        // Aplica Bônus de Classe
-        if(Player.class === 'guerreiro') { Player.stats.str = 16; Player.stats.maxHp += 20; Player.stats.hp += 20; }
-        if(Player.class === 'mago') { Player.stats.int = 16; Player.stats.mana += 30; }
-        if(Player.class === 'ladino') { Player.stats.agi = 16; Player.stats.atk += 2; }
-        
-        // Sorteia Vilão
-        Player.villain = DB.VILOES[Math.floor(Math.random() * DB.VILOES.length)];
-        
+    init: async () => {
         document.getElementById('menu-screen').style.display = 'none';
-        UI.update();
-        UI.log(`Bem-vindo a Eldoria, ${Player.name}!`);
-        Game.nextScene("Sua lenda começa agora...");
+        const load = async (url) => {
+            const r = await fetch(url);
+            const t = await r.text();
+            return Game.parseCSV(t);
+        };
+        DB.EVENTOS = await load(SHEETS.EVENTOS);
+        DB.ITENS = await load(SHEETS.ITENS);
+        Game.renderScene();
     },
 
-    nextScene: (extraText = "") => {
-        // Filtro Procedural por Ato
-        const possibleEvents = DB.EVENTOS.filter(e => parseInt(e.ato) === Player.act && !Player.flags[e.id]);
-        
-        // Se acabar eventos do ato, pega qualquer um aleatório
-        const event = possibleEvents.length > 0 
-            ? possibleEvents[Math.floor(Math.random() * possibleEvents.length)] 
-            : DB.EVENTOS[Math.floor(Math.random() * DB.EVENTOS.length)];
-        
-        // Imagem IA
-        const kw = event.keyword_imagem || "fantasy landscape";
-        document.getElementById('scene-image').src = `https://image.pollinations.ai/prompt/dark fantasy rpg art of ${kw}?width=800&height=400&nologo=true&seed=${Math.random()}`;
-        
-        // Texto
-        const minion = Player.villain.estilo_capanga || "Monstro";
-        const txt = event.texto_base.replace("[Capanga]", minion);
-        document.getElementById('scene-title').innerText = event.titulo || "Evento";
-        document.getElementById('scene-text').innerHTML = (extraText ? `<b style='color:var(--accent)'>${extraText}</b><br><br>` : "") + txt;
-        
-        // Opções
-        const area = document.getElementById('choices-area');
-        area.innerHTML = "";
-        
-        ['opcao1', 'opcao2', 'opcao3'].forEach((k, i) => {
-            if(event[k]) {
-                const btn = document.createElement('button');
-                btn.className = "btn";
-                
-                // Verifica LOJA
-                if(event[k].includes("[LOJA]")) {
-                    btn.innerText = "💰 Negociar com Mercador";
-                    btn.className += " btn-shop";
-                    btn.onclick = () => Shop.open();
-                } else {
-                    let label = event[k];
-                    // Exibe teste de perícia se existir
-                    if(i === 0 && event.teste_atributo && event.teste_atributo !== "Nenhum") {
-                        label += ` [Teste: ${event.teste_atributo}]`;
-                    }
-                    btn.innerText = label;
-                    btn.onclick = () => Game.resolve(event, k, i);
-                }
-                area.appendChild(btn);
-            }
+    parseCSV: (t) => {
+        const lines = t.split("\n").filter(l => l.trim());
+        const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
+        return lines.slice(1).map(l => {
+            const v = l.split(",");
+            return headers.reduce((o, h, i) => { o[h] = v[i] ? v[i].trim() : ""; return o; }, {});
         });
     },
 
-    resolve: (ev, optKey, idx) => {
-        if(ev.id) Player.flags[ev.id] = true;
+    showImpact: (text, color) => {
+        const div = document.getElementById('impact-overlay');
+        div.innerText = text;
+        div.style.color = color;
+        div.style.display = 'block';
+        setTimeout(() => div.style.display = 'none', 1500);
+    },
 
-        // Moral
-        const moral = parseInt(ev.moral || 0);
-        Player.moral += moral;
-        if(moral !== 0) UI.log(`Sua moral mudou: ${moral > 0 ? '+' : ''}${moral}`, "loot");
+    renderScene: () => {
+        // Busca o evento específico ou sorteia um se não houver sequência
+        let ev = DB.EVENTOS.find(e => e.id === player.nextEventId);
+        if(!ev) ev = DB.EVENTOS[Math.floor(Math.random() * DB.EVENTOS.length)];
 
-        // Lógica de Teste D20 (Apenas Opção 1)
-        let success = true;
-        if(idx === 0 && ev.teste_atributo && ev.teste_atributo !== "Nenhum") {
-            const dc = parseInt(ev.dificuldade || 10);
-            const d20 = Math.floor(Math.random() * 20) + 1;
-            
-            let bonus = 0;
-            const attr = ev.teste_atributo.toLowerCase();
-            if(attr.includes("força")) bonus = Math.floor((Player.stats.str - 10)/2);
-            if(attr.includes("agilidade")) bonus = Math.floor((Player.stats.agi - 10)/2);
-            if(attr.includes("inteligência") || attr.includes("vontade")) bonus = Math.floor((Player.stats.int - 10)/2);
-            
-            const total = d20 + bonus;
-            success = total >= dc;
-            UI.log(`🎲 Teste ${ev.teste_atributo}: ${d20}+${bonus} = ${total} (DC ${dc}) -> ${success ? "SUCESSO" : "FALHA"}`);
-        }
+        // Imagens do Unsplash (Paisagens reais)
+        const kw = ev.keyword_imagem || "fantasy,forest";
+        document.getElementById('scene-image').src = `https://source.unsplash.com/featured/800x450/?${kw}`;
+        
+        document.getElementById('scene-title').innerText = ev.titulo;
+        document.getElementById('scene-text').innerText = ev.texto_base;
+        
+        const grid = document.getElementById('choices-grid');
+        grid.innerHTML = "";
+
+        ["opcao1", "opcao2", "opcao3"].forEach((opt, i) => {
+            if(ev[opt]) {
+                const b = document.createElement('button');
+                b.className = "btn";
+                b.innerText = ev[opt];
+                b.onclick = () => Game.resolve(ev, opt, i);
+                grid.appendChild(b);
+            }
+        });
+        UI.update();
+    },
+
+    resolve: (ev, opt, idx) => {
+        const dc = parseInt(ev.dificuldade) || 0;
+        const roll = Math.floor(Math.random() * 20) + 1;
+        const success = idx !== 0 || roll >= dc; // Opção 1 sempre testa DC se houver
 
         if(success) {
-            if(ev.sucesso_recompensa && ev.sucesso_recompensa.includes("Ganha Item")) {
-                Loot.roll();
-            }
-            if(Math.random() > 0.6) Loot.roll(); // Chance aleatória de loot
-            Game.nextScene(ev.sucesso_narrativa || "Você avança com sucesso.");
+            Game.showImpact("SUCESSO", "var(--success)");
+            player.nextEventId = ev.id_proximo || ""; // SEGUE A HISTÓRIA
+            if(ev.sucesso_recompensa && ev.sucesso_recompensa.includes("Item")) Loot.get();
         } else {
-            // Penalidades
-            const pen = ev.falha_penalidade || "";
-            if(pen.includes("Vida")) { Player.stats.hp -= 15; UI.log("Perdeu 15 Vida!", "fail"); }
-            if(pen.includes("Mana")) { Player.stats.mana -= 15; UI.log("Perdeu 15 Mana!", "fail"); }
-            if(pen.includes("TAG:")) {
-                const tag = pen.split(":")[1];
-                Player.flags[tag] = true;
-                UI.log(`Consequência: ${tag}`, "fail");
-            }
-            
-            if(Player.stats.hp <= 0) { alert("GAME OVER! Sua jornada acabou."); location.reload(); }
-            
-            Game.nextScene(ev.falha_narrativa || "As coisas não saíram como planejado.");
+            Game.showImpact("FALHA", "var(--danger)");
+            document.body.classList.add('shake');
+            setTimeout(() => document.body.classList.remove('shake'), 500);
+            player.hp -= 15;
+            player.nextEventId = ""; // Perde a sequência se falhar? Ou mantenha se preferir
         }
-        UI.update();
+
+        if(player.hp <= 0) alert("Morte...");
+        Game.renderScene();
     }
 };
 
-// --- 3. SISTEMA DE LOJA ---
-const Shop = {
-    open: () => {
-        document.getElementById('shop-modal').style.display = 'flex';
-        Shop.render();
-    },
-    close: () => {
-        document.getElementById('shop-modal').style.display = 'none';
-    },
-    render: () => {
-        // Estoque do Vendedor (Aleatório)
-        const stockDiv = document.getElementById('shop-stock');
-        stockDiv.innerHTML = "";
-        for(let i=0; i<5; i++) {
-            const item = DB.ITENS[Math.floor(Math.random() * DB.ITENS.length)];
-            const price = parseInt(item.preco || 10);
-            const div = document.createElement('div');
-            div.className = "shop-item";
-            div.innerHTML = `<span style="color:#ccc">${item.nome}</span> <button class="btn" style="width:auto; padding:5px 15px; margin:0; font-size:0.8em; background:#2a2a2a;" onclick="Shop.buy('${item.id_item}', ${price})">Comprar (${price} G)</button>`;
-            stockDiv.appendChild(div);
-        }
-
-        // Inventário do Jogador
-        const playerDiv = document.getElementById('shop-player');
-        playerDiv.innerHTML = "";
-        Player.inventory.forEach((item, idx) => {
-            const price = Math.floor(parseInt(item.preco || 10) / 2); // Vende por metade
-            const div = document.createElement('div');
-            div.className = "shop-item";
-            div.innerHTML = `<span style="color:#ccc">${item.nome}</span> <button class="btn" style="width:auto; padding:5px 15px; margin:0; font-size:0.8em; background:#3a1a1a; color:#ff8888; border-color:#500;" onclick="Shop.sell(${idx}, ${price})">Vender (+${price} G)</button>`;
-            playerDiv.appendChild(div);
-        });
-    },
-    buy: (id, price) => {
-        if(Player.gold >= price) {
-            Player.gold -= price;
-            const itemReal = DB.ITENS.find(i => i.id_item === id);
-            Player.inventory.push(itemReal);
-            UI.log(`Comprou ${itemReal.nome}`);
-            Shop.render(); UI.update();
-        } else alert("Ouro insuficiente!");
-    },
-    sell: (idx, price) => {
-        const item = Player.inventory[idx];
-        Player.gold += price;
-        Player.inventory.splice(idx, 1);
-        UI.log(`Vendeu ${item.nome}`);
-        Shop.render(); UI.update();
-    }
-};
-
-// --- 4. LOOT ---
 const Loot = {
-    roll: () => {
+    get: () => {
         const item = DB.ITENS[Math.floor(Math.random() * DB.ITENS.length)];
-        Player.inventory.push(item);
-        UI.log(`Loot: ${item.nome}`, "loot");
-        UI.update();
+        player.inventory.push(item);
+        UI.log(`Achou: ${item.nome}`);
     }
 };
 
-// --- 5. UI ---
 const UI = {
     update: () => {
-        document.getElementById('ui-name').innerText = Player.name;
-        document.getElementById('ui-race').innerText = Player.race.nome || "-";
-        document.getElementById('ui-class').innerText = Player.class.toUpperCase();
-        document.getElementById('ui-moral').innerText = Player.moral;
-        document.getElementById('ui-gold').innerText = Player.gold + " G";
+        document.getElementById('ui-hp').innerText = `${player.hp}/${player.maxHp}`;
+        document.getElementById('ui-mana').innerText = player.mana;
+        document.getElementById('ui-gold').innerText = player.gold;
         
-        document.getElementById('ui-hp').innerText = `${Player.stats.hp}/${Player.stats.maxHp}`;
-        document.getElementById('ui-mana').innerText = Player.stats.mana;
-        document.getElementById('ui-atk').innerText = Player.stats.atk;
-        
-        document.getElementById('ui-str').innerText = Player.stats.str;
-        document.getElementById('ui-agi').innerText = Player.stats.agi;
-        document.getElementById('ui-int').innerText = Player.stats.int;
-
-        const list = document.getElementById('inventory-list');
-        list.innerHTML = "";
-        Player.inventory.forEach(i => {
-            let d = document.createElement('div');
-            d.style.padding="8px"; d.style.borderBottom="1px solid #222"; d.style.color="#888"; d.innerText = `📦 ${i.nome}`;
-            list.appendChild(d);
+        const inv = document.getElementById('inventory-list');
+        inv.innerHTML = "";
+        player.inventory.forEach((item, i) => {
+            const div = document.createElement('div');
+            div.className = "inv-item";
+            div.innerHTML = `<span>${item.nome}</span>`;
+            if(item.tipo === "Arma") {
+                const b = document.createElement('button');
+                b.className = "equip-btn";
+                b.innerText = player.equipped === item ? "Equipado" : "Equipar";
+                b.onclick = () => { player.equipped = item; UI.update(); };
+                div.appendChild(b);
+            }
+            inv.appendChild(div);
         });
+        
+        // Atualiza Ataque
+        const bonus = player.equipped ? parseInt(player.equipped.dano) : 0;
+        document.getElementById('ui-atk').innerText = 5 + bonus;
     },
-    log: (msg, type="") => {
-        const div = document.getElementById('game-log');
-        const line = document.createElement('div');
-        line.className = `log-entry log-${type}`;
-        line.innerText = `> ${msg}`;
-        div.prepend(line);
+    log: (m) => {
+        const log = document.getElementById('game-log');
+        log.innerHTML = `> ${m}<br>` + log.innerHTML;
     }
 };
-
-Loader.init();
 </script>
 </body>
 </html>
