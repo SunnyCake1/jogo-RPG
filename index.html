@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>RPG Procedural - Sistema Grandioso</title>
+    <style>
+        body { background: #121212; color: #eee; font-family: sans-serif; display: flex; margin: 0; height: 100vh; }
+        #game { flex: 3; padding: 40px; display: flex; flex-direction: column; }
+        #sidebar { flex: 1; background: #1a1a1a; padding: 20px; border-left: 2px solid #333; }
+        .btn { background: #333; color: #ffcc00; border: 1px solid #555; padding: 15px; margin: 10px 0; cursor: pointer; border-radius: 5px; text-align: left; font-size: 16px; transition: 0.2s; }
+        .btn:hover:not(:disabled) { background: #444; border-color: #ffcc00; }
+        .btn:disabled { color: #666; cursor: not-allowed; border-color: #333; opacity: 0.6; }
+        .stat-val { font-weight: bold; color: #ffcc00; }
+        h3 { border-bottom: 1px solid #444; padding-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="game">
+    <h2 id="log-msg" style="color: #666;">Carregando banco de dados...</h2>
+    <div id="texto-narrativo" style="font-size: 1.2em; line-height: 1.6; margin-bottom: 20px; min-height: 100px;"></div>
+    <div id="opcoes-area" style="display: flex; flex-direction: column;"></div>
+</div>
+
+<div id="sidebar">
+    <h3>Status do Herói</h3>
+    <p>❤️ Vida: <span id="hp" class="stat-val">-</span></p>
+    <p>✨ Mana: <span id="mana" class="stat-val">-</span></p>
+    <p>👤 Raça: <span id="raca" class="stat-val">-</span></p>
+    <p>👺 Vilão: <span id="vilao" class="stat-val">-</span></p>
+    <hr>
+    <h3>🎒 Inventário</h3>
+    <ul id="inventario-lista" style="padding-left: 20px;"></ul>
+</div>
+
+<script>
+// --- CONFIGURAÇÃO E LINKS ---
+const LINKS_SISTEMA = {
+    VILOES: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSXmWaCWAZyq4Sj5PVfQCYZRCucsYXU9rWGsxyiMS_IdYnmvf80Y_LCePmBwGCUqtpvdsKE61xO0CJ2/pub?gid=0&single=true&output=csv",
+    RACAS: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSXmWaCWAZyq4Sj5PVfQCYZRCucsYXU9rWGsxyiMS_IdYnmvf80Y_LCePmBwGCUqtpvdsKE61xO0CJ2/pub?gid=1264466421&single=true&output=csv",
+    ITENS: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSXmWaCWAZyq4Sj5PVfQCYZRCucsYXU9rWGsxyiMS_IdYnmvf80Y_LCePmBwGCUqtpvdsKE61xO0CJ2/pub?gid=111995480&single=true&output=csv",
+    DROPS: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSXmWaCWAZyq4Sj5PVfQCYZRCucsYXU9rWGsxyiMS_IdYnmvf80Y_LCePmBwGCUqtpvdsKE61xO0CJ2/pub?gid=1548671969&single=true&output=csv",
+    EVENTOS: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSXmWaCWAZyq4Sj5PVfQCYZRCucsYXU9rWGsxyiMS_IdYnmvf80Y_LCePmBwGCUqtpvdsKE61xO0CJ2/pub?gid=468277323&single=true&output=csv"
+};
+
+let DB = {};
+let player = { hp: 100, mana: 50, raca: "", vilao: "", inv: [] };
+
+// --- FUNÇÕES DE SISTEMA ---
+
+function parseCSV(text) {
+    const lines = text.split("\n");
+    const headers = lines[0].split(",");
+    return lines.slice(1).map(line => {
+        const values = line.split(",");
+        return headers.reduce((obj, header, i) => {
+            obj[header.trim()] = values[i] ? values[i].trim() : "";
+            return obj;
+        }, {});
+    });
+}
+
+async function carregarDados() {
+    try {
+        const responses = await Promise.all(Object.values(LINKS_SISTEMA).map(url => fetch(url).then(r => r.text())));
+        const keys = Object.keys(LINKS_SISTEMA);
+        keys.forEach((key, i) => { DB[key] = parseCSV(responses[i]); });
+        
+        iniciarAventura();
+    } catch (err) {
+        document.getElementById('log-msg').innerText = "Erro ao carregar banco de dados. Verifique sua conexão.";
+        console.error(err);
+    }
+}
+
+// --- LÓGICA DO JOGO ---
+
+function iniciarAventura() {
+    player.vilao = DB.VILOES[Math.floor(Math.random() * DB.VILOES.length)];
+    player.raca = DB.RACAS[Math.floor(Math.random() * DB.RACAS.length)];
+    
+    // Bônus Racial (Opcional - só funciona se tiver coluna Bonus_Mana na planilha)
+    if(player.raca.Bonus_Mana) player.mana += parseInt(player.raca.Bonus_Mana);
+
+    atualizarUI();
+    document.getElementById('log-msg').innerText = "Aventura em curso...";
+    proximaCena("Bem-vindo! Sua jornada começa agora.");
+}
+
+function atualizarUI() {
+    document.getElementById('hp').innerText = player.hp;
+    document.getElementById('mana').innerText = player.mana;
+    document.getElementById('raca').innerText = player.raca.Nome || "Viajante";
+    document.getElementById('vilao').innerText = player.vilao.Nome || "Desconhecido";
+    
+    const lista = document.getElementById('inventario-lista');
+    lista.innerHTML = player.inv.length ? "" : "<li>(Vazio)</li>";
+    player.inv.forEach(item => {
+        let li = document.createElement('li');
+        li.innerText = `📦 ${item.Nome}`;
+        lista.appendChild(li);
+    });
+}
+
+// Essa função conecta o Clique -> Custo -> Loot -> Próxima Cena
+function processarEscolha(textoOpcao, evento) {
+    // 1. Verifica Custo de Mana (Lógica Anti-Softlock básica)
+    let custoMana = parseInt(evento.Custo_Mana) || 0;
+    
+    if (player.mana < custoMana) {
+        alert(`Você precisa de ${custoMana} de Mana para fazer isso!`);
+        return; // Cancela a ação
+    }
+
+    // 2. Desconta recurso
+    player.mana -= custoMana;
+    
+    // 3. Sistema de Loot (Baseado na sua Tabela_Drop)
+    // Aqui simulamos uma chance fixa de 30% de achar algo ao agir
+    if (Math.random() > 0.7) { 
+        ganharLoot(); 
+    }
+
+    atualizarUI();
+    proximaCena(`Você decidiu: ${textoOpcao}`);
+}
+
+function ganharLoot() {
+    // Pega um item aleatório da aba ITENS
+    // (Futuramente podemos cruzar com a Tabela_Drop real)
+    const itemSorteado = DB.ITENS[Math.floor(Math.random() * DB.ITENS.length)];
+    if (itemSorteado) {
+        player.inv.push(itemSorteado);
+        alert(`✨ Sorte! Você encontrou: ${itemSorteado.Nome}!`);
+    }
+}
+
+function proximaCena(textoExtra = "") {
+    const evento = DB.EVENTOS[Math.floor(Math.random() * DB.EVENTOS.length)];
+    const capanga = player.vilao.Estilo_Capanga || "inimigo";
+    
+    // Substituição Procedural
+    let narrativa = evento.Texto_Base.replace("[Capanga]", capanga);
+    document.getElementById('texto-narrativo').innerText = (textoExtra ? textoExtra + "\n\n" : "") + narrativa;
+
+    const area = document.getElementById('opcoes-area');
+    area.innerHTML = "";
+
+    ["Opcao1", "Opcao2", "Opcao3"].forEach(opt => {
+        if(evento[opt]) {
+            const btn = document.createElement("button");
+            btn.className = "btn";
+            
+            // Exibe o custo no botão se houver
+            let custo = parseInt(evento.Custo_Mana) || 0;
+            btn.innerText = evento[opt] + (custo > 0 ? ` (💧 -${custo} Mana)` : "");
+            
+            // CORREÇÃO CRUCIAL AQUI:
+            // Agora o botão chama processarEscolha, passando a opção e o evento inteiro
+            btn.onclick = () => processarEscolha(evento[opt], evento);
+            
+            area.appendChild(btn);
+        }
+    });
+}
+
+// Inicia tudo
+carregarDados();
+</script>
+</body>
+</html>
