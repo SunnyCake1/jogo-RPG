@@ -2,104 +2,98 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>RPG Procedural - A Lenda do Viajante</title>
+    <title>RPG Procedural - Edição Épica</title>
     <style>
-        body { background: #0a0a0a; color: #eee; font-family: 'Segoe UI', sans-serif; display: flex; margin: 0; height: 100vh; overflow: hidden; }
+        body { background: #050505; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; display: flex; margin: 0; height: 100vh; overflow: hidden; }
         
-        /* TELA DE CRIAÇÃO (NOVO) */
-        #menu-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #111; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
-        .menu-box { background: #1a1a1a; padding: 40px; border: 2px solid #333; border-radius: 10px; width: 400px; text-align: center; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
-        .input-group { margin: 20px 0; text-align: left; }
-        .input-group label { display: block; margin-bottom: 5px; color: #aaa; }
-        .input-group select, .input-group input { width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 5px; }
-        .start-btn { background: #ffcc00; color: #000; font-weight: bold; border: none; padding: 15px 30px; border-radius: 5px; cursor: pointer; font-size: 1.2em; transition: 0.3s; margin-top: 20px; }
-        .start-btn:hover { transform: scale(1.05); box-shadow: 0 0 15px #ffcc00; }
+        /* MENU INICIAL */
+        #menu-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; background-image: url('https://image.pollinations.ai/prompt/fantasy%20rpg%20map?width=1080&height=720&nologo=true'); background-size: cover; }
+        .menu-box { background: rgba(0,0,0,0.9); padding: 40px; border: 1px solid #ffcc00; border-radius: 10px; width: 400px; text-align: center; box-shadow: 0 0 50px rgba(255, 204, 0, 0.2); backdrop-filter: blur(5px); }
+        .input-group { margin: 15px 0; text-align: left; }
+        .input-group label { display: block; margin-bottom: 5px; color: #ffcc00; font-size: 0.9em; }
+        .input-group select, .input-group input { width: 100%; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 5px; }
+        .start-btn { background: linear-gradient(45deg, #ffcc00, #ffaa00); color: #000; font-weight: bold; border: none; padding: 15px 30px; border-radius: 5px; cursor: pointer; font-size: 1.2em; width: 100%; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .start-btn:hover { transform: scale(1.02); box-shadow: 0 0 20px #ffcc00; }
 
         /* JOGO PRINCIPAL */
-        #game-container { display: flex; width: 100%; height: 100%; opacity: 0.3; pointer-events: none; transition: 1s; } /* Começa desativado */
-        #game { flex: 3; padding: 40px; display: flex; flex-direction: column; }
-        #sidebar { flex: 1; background: #161616; padding: 20px; border-left: 2px solid #333; overflow-y: auto; }
+        #game-container { display: flex; width: 100%; height: 100%; opacity: 0; pointer-events: none; transition: 1s; }
+        #game { flex: 3; padding: 30px; display: flex; flex-direction: column; position: relative; }
+        #sidebar { flex: 1; background: #111; padding: 20px; border-left: 1px solid #333; overflow-y: auto; display: flex; flex-direction: column; }
         
-        .btn { background: #333; color: #ffcc00; border: 1px solid #555; padding: 15px; margin: 10px 0; cursor: pointer; border-radius: 5px; text-align: left; font-size: 16px; transition: 0.2s; width: 100%; }
-        .btn:hover:not(:disabled) { background: #444; border-color: #ffcc00; transform: translateX(5px); }
-        .btn:disabled { color: #666; cursor: not-allowed; border-color: #333; opacity: 0.6; }
-        .log-entry { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #222; color: #888; font-size: 0.9em; }
-        .destaque { color: #fff; font-weight: bold; }
-        #combat-screen { display: none; background: #2a0a0a; padding: 20px; border-radius: 10px; border: 1px solid #ff4444; margin-bottom: 20px; animation: flashRed 0.5s; }
-        @keyframes flashRed { from { background: #500; } to { background: #2a0a0a; } }
+        /* IMAGEM DO EVENTO */
+        #scene-image { width: 100%; height: 300px; object-fit: cover; border-radius: 8px; border: 1px solid #444; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); background: #222; transition: opacity 0.5s; }
         
-        .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
-        .stat-label { color: #aaa; }
-        .stat-val { font-weight: bold; color: #ffcc00; }
+        .btn { background: #222; color: #ccc; border: 1px solid #444; padding: 18px; margin: 8px 0; cursor: pointer; border-radius: 5px; text-align: left; font-size: 16px; transition: 0.2s; position: relative; overflow: hidden; }
+        .btn:hover:not(:disabled) { background: #333; border-color: #ffcc00; color: #fff; padding-left: 25px; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* INVENTÁRIO */
+        .item-row { display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; padding: 8px; margin-bottom: 5px; border-radius: 4px; border: 1px solid #333; font-size: 0.9em; }
+        .equip-btn { background: #333; color: #fff; border: none; padding: 4px 8px; cursor: pointer; font-size: 0.8em; border-radius: 3px; }
+        .equip-btn:hover { background: #ffcc00; color: #000; }
+        .equipped-badge { color: #4caf50; font-weight: bold; font-size: 0.8em; }
+
+        /* STATS */
+        .stat-row { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px solid #222; padding-bottom: 5px; }
+        .stat-val { color: #ffcc00; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div id="menu-screen">
-        <h1 style="color: #ffcc00; font-size: 3em; margin-bottom: 10px;">A LENDA PROCEDURAL</h1>
-        <p style="color: #666; margin-bottom: 30px;">Carregando universo...</p>
-        
-        <div id="loading-msg" style="color: #ffcc00;">Conectando ao Google Sheets...</div>
-
-        <div id="character-creation" class="menu-box" style="display: none;">
-            <h2>Crie seu Herói</h2>
+        <div class="menu-box">
+            <h1 style="color: #fff; margin: 0 0 20px 0; text-transform: uppercase; letter-spacing: 2px;">Crônicas de Natal</h1>
+            <div id="loading-msg" style="color: #ffcc00; font-size: 0.9em;">Baixando dados do servidor...</div>
             
-            <div class="input-group">
-                <label>Nome do Personagem</label>
-                <input type="text" id="input-nome" placeholder="Ex: Gandalf, o Cinza">
+            <div id="character-creation" style="display: none;">
+                <div class="input-group">
+                    <label>Nome do Herói</label>
+                    <input type="text" id="input-nome" placeholder="Digite seu nome...">
+                </div>
+                <div class="input-group">
+                    <label>Linhagem (Raça)</label>
+                    <select id="select-raca"></select>
+                </div>
+                <div class="input-group">
+                    <label>Classe</label>
+                    <select id="select-classe">
+                        <option value="guerreiro">Guerreiro (Foco em Vida/Ataque)</option>
+                        <option value="mago">Mago (Foco em Mana)</option>
+                        <option value="explorador">Explorador (Equilibrado)</option>
+                    </select>
+                </div>
+                <button class="start-btn" onclick="iniciarJogo()">Começar Jornada</button>
             </div>
-
-            <div class="input-group">
-                <label>Raça</label>
-                <select id="select-raca"></select> </div>
-
-            <div class="input-group">
-                <label>Classe Inicial</label>
-                <select id="select-classe">
-                    <option value="guerreiro">Guerreiro (+5 Vida, +2 Ataque)</option>
-                    <option value="mago">Mago (+20 Mana, +1 Ataque)</option>
-                    <option value="ladino">Ladino (+10 Sorte, +3 Ataque)</option>
-                </select>
-            </div>
-
-            <button class="start-btn" onclick="iniciarJogo()">INICIAR AVENTURA</button>
         </div>
     </div>
 
     <div id="game-container">
         <div id="game">
-            <h2 id="titulo-cena" style="color: #ffcc00;">...</h2>
-            
-            <div id="combat-screen">
-                <h3 style="color: #ff4444; margin-top: 0;">⚔️ COMBATE!</h3>
-                <p>Inimigo: <span id="enemy-name" class="destaque">-</span> | HP: <span id="enemy-hp">??</span></p>
-                <div id="combat-log" style="font-style: italic; color: #ccc;"></div>
-            </div>
-
-            <div id="texto-narrativo" style="font-size: 1.2em; line-height: 1.6; margin-bottom: 20px; min-height: 80px;"></div>
+            <img id="scene-image" src="" alt="Cena do Jogo">
+            <div id="texto-narrativo" style="font-size: 1.1em; line-height: 1.6; margin-bottom: 20px; color: #ccc;"></div>
             <div id="opcoes-area" style="display: flex; flex-direction: column;"></div>
         </div>
 
         <div id="sidebar">
-            <h3 id="hero-name-display">Viajante</h3>
-            <div class="stat-row"><span class="stat-label">❤️ Vida</span> <span class="stat-val"><span id="hp"></span>/<span id="max-hp"></span></span></div>
-            <div class="stat-row"><span class="stat-label">✨ Mana</span> <span id="mana" class="stat-val"></span></div>
-            <div class="stat-row"><span class="stat-label">⚔️ Ataque</span> <span id="atk" class="stat-val"></span></div>
-            <div class="stat-row"><span class="stat-label">🧬 Raça</span> <span id="raca" class="stat-val"></span></div>
-            <div class="stat-row"><span class="stat-label">👹 Vilão</span> <span id="vilao" class="stat-val" style="color:#ff4444"></span></div>
+            <h3 id="hero-name-display" style="color: #fff; border-bottom: 2px solid #ffcc00; padding-bottom: 10px;">Heroi</h3>
             
-            <hr style="border-color: #333;">
-            <h3>🎒 Inventário</h3>
-            <ul id="inventario-lista" style="padding-left: 20px; color: #aaa;"></ul>
+            <div class="stat-row"><span style="color:#aaa">❤️ Vida</span> <span class="stat-val"><span id="hp"></span>/<span id="max-hp"></span></span></div>
+            <div class="stat-row"><span style="color:#aaa">✨ Mana</span> <span id="mana" class="stat-val"></span></div>
+            <div class="stat-row"><span style="color:#aaa">⚔️ Ataque</span> <span class="stat-val"><span id="atk"></span> <span id="bonus-atk" style="color:#4caf50; font-size:0.8em;"></span></span></div>
+            <div class="stat-row"><span style="color:#aaa">🛡️ Defesa</span> <span id="def" class="stat-val">0</span></div>
             
-            <hr style="border-color: #333;">
-            <h3>📜 Diário</h3>
-            <div id="game-log" style="height: 200px; overflow-y: auto; font-family: monospace;"></div>
+            <div style="margin-top: 20px; margin-bottom: 10px; font-weight: bold; color: #fff;">⚔️ Equipamento</div>
+            <div id="slot-mao" style="color: #888; font-size: 0.9em; margin-bottom: 20px;">Mão: (Vazio)</div>
+
+            <div style="margin-bottom: 10px; font-weight: bold; color: #fff;">🎒 Mochila</div>
+            <div id="inventario-lista"></div>
+
+            <div style="margin-top: auto; border-top: 1px solid #333; padding-top: 10px; height: 150px; overflow-y: auto; font-size: 0.85em; color: #666; font-family: monospace;" id="game-log"></div>
         </div>
     </div>
 
 <script>
-// --- CONFIGURAÇÃO ---
+// --- LINKS (MANTENHA OS SEUS AQUI) ---
 const LINKS_SISTEMA = {
     VILOES: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSXmWaCWAZyq4Sj5PVfQCYZRCucsYXU9rWGsxyiMS_IdYnmvf80Y_LCePmBwGCUqtpvdsKE61xO0CJ2/pub?gid=0&single=true&output=csv",
     RACAS: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSXmWaCWAZyq4Sj5PVfQCYZRCucsYXU9rWGsxyiMS_IdYnmvf80Y_LCePmBwGCUqtpvdsKE61xO0CJ2/pub?gid=1264466421&single=true&output=csv",
@@ -109,11 +103,13 @@ const LINKS_SISTEMA = {
 };
 
 let DB = {};
-let player = { nome: "Viajante", hp: 100, maxHp: 100, mana: 50, atk: 5, raca: null, vilao: null, inv: [], flags: {} };
-let combatState = { active: false, enemy: null };
+let player = { 
+    nome: "", hp: 100, maxHp: 100, mana: 50, atk: 5, def: 0,
+    raca: null, vilao: null, inv: [], flags: {},
+    equipamento: { mao: null }
+};
 
-// --- ENGINE ---
-
+// --- FUNÇÕES TÉCNICAS ---
 function parseCSV(text) {
     const lines = text.split("\n");
     const headers = lines[0].split(",");
@@ -131,89 +127,123 @@ async function carregarDados() {
         const responses = await Promise.all(Object.values(LINKS_SISTEMA).map(url => fetch(url).then(r => r.text())));
         const keys = Object.keys(LINKS_SISTEMA);
         keys.forEach((key, i) => { DB[key] = parseCSV(responses[i]); });
-        
-        prepararMenu(); // CHAMA O MENU QUANDO TERMINAR
-    } catch (err) {
-        document.getElementById('loading-msg').innerText = "Erro ao carregar dados. Verifique a internet.";
-    }
+        prepararMenu();
+    } catch (err) { document.getElementById('loading-msg').innerText = "Erro ao conectar."; }
 }
 
 function prepararMenu() {
     document.getElementById('loading-msg').style.display = 'none';
     document.getElementById('character-creation').style.display = 'block';
-    
-    // Preenche o Select de Raças com os dados da planilha
     const select = document.getElementById('select-raca');
     DB.RACAS.forEach((raca, index) => {
         let opt = document.createElement('option');
-        opt.value = index;
-        opt.innerText = raca.Nome;
-        select.appendChild(opt);
+        opt.value = index; opt.innerText = raca.Nome; select.appendChild(opt);
     });
 }
 
+// --- SISTEMA DE JOGO ---
+
 function iniciarJogo() {
-    // 1. Pega os dados do Menu
-    const nomeInput = document.getElementById('input-nome').value;
-    player.nome = nomeInput || "Viajante Sem Nome";
-    
-    const racaIndex = document.getElementById('select-raca').value;
-    player.raca = DB.RACAS[racaIndex];
-    
+    player.nome = document.getElementById('input-nome').value || "Viajante";
+    player.raca = DB.RACAS[document.getElementById('select-raca').value];
     const classe = document.getElementById('select-classe').value;
 
-    // 2. Aplica Bônus de Classe
-    if (classe === 'guerreiro') { player.maxHp += 5; player.hp += 5; player.atk += 2; }
-    if (classe === 'mago') { player.mana += 20; player.atk += 1; }
-    if (classe === 'ladino') { player.atk += 3; }
-
-    // 3. Sorteia o Vilão
+    // Balanceamento inicial
+    if (classe === 'guerreiro') { player.maxHp = 120; player.atk = 8; }
+    if (classe === 'mago') { player.mana = 100; player.atk = 4; }
+    
+    player.hp = player.maxHp;
     player.vilao = DB.VILOES[Math.floor(Math.random() * DB.VILOES.length)];
 
-    // 4. Esconde Menu e Mostra Jogo
     document.getElementById('menu-screen').style.display = 'none';
     document.getElementById('game-container').style.opacity = '1';
     document.getElementById('game-container').style.pointerEvents = 'all';
 
     atualizarUI();
-    log(`Bem-vindo, ${player.nome} da raça ${player.raca.Nome}!`);
-    proximaCena("Sua lenda começa agora...");
-}
-
-// ... (MANTENHA AS FUNÇÕES DE LOG, ATUALIZAR UI, COMBATE E PROXIMA CENA IGUAIS ÀS ANTERIORES) ...
-// Para economizar espaço, vou colar apenas as funções essenciais que precisam conversar com o novo sistema.
-// Se você copiou o código anterior, as funções abaixo são as mesmas, só o 'atualizarUI' muda um pouco.
-
-function log(msg) {
-    const logDiv = document.getElementById('game-log');
-    const entry = document.createElement('div');
-    entry.className = "log-entry";
-    entry.innerText = `> ${msg}`;
-    logDiv.prepend(entry);
+    proximaCena("O destino chama...");
 }
 
 function atualizarUI() {
-    document.getElementById('hero-name-display').innerText = player.nome; // Mostra o nome escolhido
+    document.getElementById('hero-name-display').innerText = player.nome;
     document.getElementById('hp').innerText = player.hp;
     document.getElementById('max-hp').innerText = player.maxHp;
     document.getElementById('mana').innerText = player.mana;
     document.getElementById('atk').innerText = player.atk;
-    document.getElementById('raca').innerText = player.raca ? player.raca.Nome : "-";
-    document.getElementById('vilao').innerText = player.vilao ? player.vilao.Nome : "-";
-    
-    const lista = document.getElementById('inventario-lista');
-    lista.innerHTML = player.inv.length ? "" : "<li>(Mochila Vazia)</li>";
-    player.inv.forEach(item => {
-        let li = document.createElement('li');
-        li.innerText = item.Nome;
-        lista.appendChild(li);
-    });
+    document.getElementById('def').innerText = player.def;
 
-    if (player.hp <= 0) {
-        alert("GAME OVER! Aperte F5 para tentar novamente.");
-        location.reload();
-    }
+    // Renderiza Equipamento
+    const bonusAtk = player.equipamento.mao ? parseInt(player.equipamento.mao.Dano || 0) : 0;
+    document.getElementById('bonus-atk').innerText = bonusAtk > 0 ? `(+${bonusAtk})` : "";
+    document.getElementById('slot-mao').innerText = player.equipamento.mao ? `⚔️ ${player.equipamento.mao.Nome}` : "Mão: (Desarmado)";
+    
+    // Renderiza Inventário com Botões
+    const lista = document.getElementById('inventario-lista');
+    lista.innerHTML = "";
+    
+    if (player.inv.length === 0) lista.innerHTML = "<div style='color:#444; font-style:italic; font-size:0.8em'>Vazio</div>";
+
+    player.inv.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = "item-row";
+        div.innerHTML = `<span>${item.Nome}</span>`;
+
+        // Botão de Equipar (Se for Arma)
+        if (item.Tipo === "Arma") {
+            const btn = document.createElement('button');
+            btn.className = "equip-btn";
+            btn.innerText = "Equipar";
+            btn.onclick = () => equiparItem(index);
+            div.appendChild(btn);
+        }
+        // Botão de Usar (Se for Consumível)
+        else if (item.Tipo === "Pocao" || item.Tipo === "Consumivel") {
+            const btn = document.createElement('button');
+            btn.className = "equip-btn";
+            btn.innerText = "Usar";
+            btn.style.backgroundColor = "#2a9d8f";
+            btn.onclick = () => usarItem(index);
+            div.appendChild(btn);
+        }
+
+        lista.appendChild(div);
+    });
 }
+
+function equiparItem(index) {
+    const item = player.inv[index];
+    // Se já tiver algo equipado, devolve pra mochila
+    if (player.equipamento.mao) {
+        player.inv.push(player.equipamento.mao);
+    }
+    // Equipa o novo e remove da mochila
+    player.equipamento.mao = item;
+    player.inv.splice(index, 1);
+    
+    log(`Você equipou: ${item.Nome}`);
+    atualizarUI();
+}
+
+function usarItem(index) {
+    const item = player.inv[index];
+    // Lógica simples de poção
+    if (item.Nome.includes("Vida")) {
+        player.hp = Math.min(player.hp + 20, player.maxHp);
+        log("Você recuperou 20 de Vida!");
+    } else if (item.Nome.includes("Mana")) {
+        player.mana += 20;
+        log("Você recuperou 20 de Mana!");
+    }
+    
+    player.inv.splice(index, 1); // Consome o item
+    atualizarUI();
+}
+
+function log(msg) {
+    const logDiv = document.getElementById('game-log');
+    logDiv.innerHTML = `> ${msg}<br>` + logDiv.innerHTML;
+}
+
+// --- NARRATIVA E EVENTOS ---
 
 function proximaCena(textoExtra = "") {
     let evento;
@@ -221,13 +251,18 @@ function proximaCena(textoExtra = "") {
     do {
         evento = DB.EVENTOS[Math.floor(Math.random() * DB.EVENTOS.length)];
         tentativas++;
-    } while (player.flags[evento.ID] && tentativas < 10);
+    } while (player.flags[evento.ID] && tentativas < 15);
+
+    // SISTEMA DE IMAGEM IA
+    // Se não tiver Keyword na planilha, usa 'fantasy landscape' padrão
+    const keyword = evento.Keyword_Imagem || "fantasy landscape";
+    const imgUrl = `https://image.pollinations.ai/prompt/dark fantasy painting of ${keyword}?width=600&height=300&nologo=true&seed=${Math.random()}`;
+    document.getElementById('scene-image').src = imgUrl;
 
     const capanga = player.vilao ? (player.vilao.Estilo_Capanga || "Inimigo") : "Inimigo";
     let narrativa = evento.Texto_Base.replace("[Capanga]", capanga);
     
-    document.getElementById('titulo-cena').innerText = "O que você faz?";
-    document.getElementById('texto-narrativo').innerText = (textoExtra ? textoExtra + "\n\n" : "") + narrativa;
+    document.getElementById('texto-narrativo').innerHTML = (textoExtra ? `<span style='color:#ffcc00'>${textoExtra}</span><br><br>` : "") + narrativa;
 
     const area = document.getElementById('opcoes-area');
     area.innerHTML = "";
@@ -237,11 +272,10 @@ function proximaCena(textoExtra = "") {
             const btn = document.createElement("button");
             btn.className = "btn";
             let custo = parseInt(evento.Custo_Mana) || 0;
-            btn.innerText = evento[opt] + (custo > 0 ? ` (💧 -${custo})` : "");
+            btn.innerText = evento[opt] + (custo > 0 ? ` (✨ -${custo} Mana)` : "");
             
             if (custo > 0 && player.mana < custo) {
                 btn.disabled = true;
-                btn.innerText += " [Mana Insuficiente]";
             }
 
             btn.onclick = () => processarEscolha(evento[opt], evento);
@@ -252,80 +286,20 @@ function proximaCena(textoExtra = "") {
 
 function processarEscolha(textoOpcao, evento) {
     let custoMana = parseInt(evento.Custo_Mana) || 0;
-    if (player.mana < custoMana) return;
     player.mana -= custoMana;
     if(evento.ID) player.flags[evento.ID] = true;
 
-    if (textoOpcao.includes("Atacar") || textoOpcao.includes("Lutar")) {
-        iniciarCombate(player.vilao.Estilo_Capanga);
-        return;
+    // Drop System
+    if (Math.random() > 0.6) {
+        const item = DB.ITENS[Math.floor(Math.random() * DB.ITENS.length)];
+        if(item) {
+            player.inv.push(item);
+            log(`Encontrou: ${item.Nome}`);
+        }
     }
 
-    if (Math.random() > 0.6) ganharLoot();
-
-    log(`Ação: ${textoOpcao}`);
     atualizarUI();
-    proximaCena(`Você decidiu: ${textoOpcao}`);
-}
-
-function iniciarCombate(nomeInimigo) {
-    combatState.active = true;
-    combatState.enemy = { nome: nomeInimigo, hp: 30, atk: 4 };
-    document.getElementById('combat-screen').style.display = 'block';
-    document.getElementById('enemy-name').innerText = nomeInimigo;
-    document.getElementById('enemy-hp').innerText = 30;
-    gerarBotoesCombate();
-}
-
-function gerarBotoesCombate() {
-    const area = document.getElementById('opcoes-area');
-    area.innerHTML = "";
-    const btnAtk = document.createElement("button");
-    btnAtk.className = "btn";
-    btnAtk.innerText = "⚔️ Atacar";
-    btnAtk.onclick = () => turnoCombate('ataque');
-    area.appendChild(btnAtk);
-    
-    const btnFugir = document.createElement("button");
-    btnFugir.className = "btn";
-    btnFugir.innerText = "🏃 Fugir";
-    btnFugir.onclick = () => {
-        combatState.active = false;
-        document.getElementById('combat-screen').style.display = 'none';
-        proximaCena("Você fugiu!");
-    };
-    area.appendChild(btnFugir);
-}
-
-function turnoCombate(acao) {
-    let logMsg = "";
-    if (acao === 'ataque') {
-        let dano = player.atk + Math.floor(Math.random() * 3);
-        combatState.enemy.hp -= dano;
-        logMsg = `Causou ${dano} de dano!`;
-    }
-    if (combatState.enemy.hp <= 0) {
-        combatState.active = false;
-        document.getElementById('combat-screen').style.display = 'none';
-        ganharLoot();
-        proximaCena("Inimigo derrotado!");
-        return;
-    }
-    let danoInimigo = combatState.enemy.atk;
-    player.hp -= danoInimigo;
-    document.getElementById('combat-log').innerText = logMsg + ` Recebeu ${danoInimigo} de dano!`;
-    document.getElementById('enemy-hp').innerText = combatState.enemy.hp;
-    atualizarUI();
-}
-
-function ganharLoot() {
-    const itemSorteado = DB.ITENS[Math.floor(Math.random() * DB.ITENS.length)];
-    if (itemSorteado) {
-        player.inv.push(itemSorteado);
-        if(itemSorteado.Tipo === "Arma") player.atk += parseInt(itemSorteado.Dano || 2);
-        log(`Item obtido: ${itemSorteado.Nome}`);
-        alert(`Você encontrou: ${itemSorteado.Nome}!`);
-    }
+    proximaCena(`Decisão: ${textoOpcao}`);
 }
 
 carregarDados();
