@@ -2,39 +2,51 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>RPG Procedural - Sistema Grandioso</title>
+    <title>RPG Procedural - Mundo Vivo</title>
     <style>
-        body { background: #121212; color: #eee; font-family: sans-serif; display: flex; margin: 0; height: 100vh; }
+        body { background: #121212; color: #eee; font-family: 'Segoe UI', sans-serif; display: flex; margin: 0; height: 100vh; }
         #game { flex: 3; padding: 40px; display: flex; flex-direction: column; }
-        #sidebar { flex: 1; background: #1a1a1a; padding: 20px; border-left: 2px solid #333; }
-        .btn { background: #333; color: #ffcc00; border: 1px solid #555; padding: 15px; margin: 10px 0; cursor: pointer; border-radius: 5px; text-align: left; font-size: 16px; transition: 0.2s; }
-        .btn:hover:not(:disabled) { background: #444; border-color: #ffcc00; }
+        #sidebar { flex: 1; background: #1a1a1a; padding: 20px; border-left: 2px solid #333; overflow-y: auto; }
+        .btn { background: #333; color: #ffcc00; border: 1px solid #555; padding: 15px; margin: 10px 0; cursor: pointer; border-radius: 5px; text-align: left; font-size: 16px; transition: 0.2s; width: 100%; }
+        .btn:hover:not(:disabled) { background: #444; border-color: #ffcc00; transform: translateX(5px); }
         .btn:disabled { color: #666; cursor: not-allowed; border-color: #333; opacity: 0.6; }
-        .stat-val { font-weight: bold; color: #ffcc00; }
-        h3 { border-bottom: 1px solid #444; padding-bottom: 10px; }
+        .log-entry { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #333; color: #aaa; font-size: 0.9em; }
+        .destaque { color: #fff; font-weight: bold; }
+        #combat-screen { display: none; background: #2a0a0a; padding: 20px; border-radius: 10px; border: 1px solid #ff4444; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
 <div id="game">
-    <h2 id="log-msg" style="color: #666;">Carregando banco de dados...</h2>
-    <div id="texto-narrativo" style="font-size: 1.2em; line-height: 1.6; margin-bottom: 20px; min-height: 100px;"></div>
+    <h2 id="titulo-cena" style="color: #ffcc00;">Carregando...</h2>
+    
+    <div id="combat-screen">
+        <h3 style="color: #ff4444; margin-top: 0;">⚔️ EM COMBATE!</h3>
+        <p>Inimigo: <span id="enemy-name" class="destaque">Monstro</span> | HP: <span id="enemy-hp">??</span></p>
+        <div id="combat-log" style="font-style: italic; color: #ccc; margin-bottom: 10px;"></div>
+    </div>
+
+    <div id="texto-narrativo" style="font-size: 1.2em; line-height: 1.6; margin-bottom: 20px; min-height: 80px;"></div>
     <div id="opcoes-area" style="display: flex; flex-direction: column;"></div>
 </div>
 
 <div id="sidebar">
     <h3>Status do Herói</h3>
-    <p>❤️ Vida: <span id="hp" class="stat-val">-</span></p>
+    <p>❤️ Vida: <span id="hp" class="stat-val">-</span> / <span id="max-hp">100</span></p>
     <p>✨ Mana: <span id="mana" class="stat-val">-</span></p>
+    <p>⚔️ Ataque: <span id="atk" class="stat-val">10</span></p>
     <p>👤 Raça: <span id="raca" class="stat-val">-</span></p>
     <p>👺 Vilão: <span id="vilao" class="stat-val">-</span></p>
     <hr>
     <h3>🎒 Inventário</h3>
     <ul id="inventario-lista" style="padding-left: 20px;"></ul>
+    <hr>
+    <h3>📜 Histórico</h3>
+    <div id="game-log" style="height: 150px; overflow-y: auto;"></div>
 </div>
 
 <script>
-// --- CONFIGURAÇÃO E LINKS ---
+// --- CONFIGURAÇÃO ---
 const LINKS_SISTEMA = {
     VILOES: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSXmWaCWAZyq4Sj5PVfQCYZRCucsYXU9rWGsxyiMS_IdYnmvf80Y_LCePmBwGCUqtpvdsKE61xO0CJ2/pub?gid=0&single=true&output=csv",
     RACAS: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSXmWaCWAZyq4Sj5PVfQCYZRCucsYXU9rWGsxyiMS_IdYnmvf80Y_LCePmBwGCUqtpvdsKE61xO0CJ2/pub?gid=1264466421&single=true&output=csv",
@@ -44,9 +56,11 @@ const LINKS_SISTEMA = {
 };
 
 let DB = {};
-let player = { hp: 100, mana: 50, raca: "", vilao: "", inv: [] };
+// Adicionamos 'flags' para a memória do mundo e 'combat' para estado de luta
+let player = { hp: 100, maxHp: 100, mana: 50, atk: 5, raca: "", vilao: "", inv: [], flags: {} };
+let combatState = { active: false, enemy: null };
 
-// --- FUNÇÕES DE SISTEMA ---
+// --- ENGINE ---
 
 function parseCSV(text) {
     const lines = text.split("\n");
@@ -65,31 +79,38 @@ async function carregarDados() {
         const responses = await Promise.all(Object.values(LINKS_SISTEMA).map(url => fetch(url).then(r => r.text())));
         const keys = Object.keys(LINKS_SISTEMA);
         keys.forEach((key, i) => { DB[key] = parseCSV(responses[i]); });
-        
         iniciarAventura();
     } catch (err) {
-        document.getElementById('log-msg').innerText = "Erro ao carregar banco de dados. Verifique sua conexão.";
-        console.error(err);
+        document.getElementById('titulo-cena').innerText = "Erro de Conexão";
     }
 }
 
-// --- LÓGICA DO JOGO ---
+function log(msg) {
+    const logDiv = document.getElementById('game-log');
+    const entry = document.createElement('div');
+    entry.className = "log-entry";
+    entry.innerText = `> ${msg}`;
+    logDiv.prepend(entry);
+}
 
 function iniciarAventura() {
     player.vilao = DB.VILOES[Math.floor(Math.random() * DB.VILOES.length)];
     player.raca = DB.RACAS[Math.floor(Math.random() * DB.RACAS.length)];
     
-    // Bônus Racial (Opcional - só funciona se tiver coluna Bonus_Mana na planilha)
-    if(player.raca.Bonus_Mana) player.mana += parseInt(player.raca.Bonus_Mana);
+    // Aplica bônus de raça inicial (Lógica simples)
+    if(player.raca.Nome === "Anão") player.maxHp += 20;
+    if(player.raca.Nome === "Elfo") player.mana += 20;
+    player.hp = player.maxHp;
 
     atualizarUI();
-    document.getElementById('log-msg').innerText = "Aventura em curso...";
-    proximaCena("Bem-vindo! Sua jornada começa agora.");
+    proximaCena("Sua jornada começa...");
 }
 
 function atualizarUI() {
     document.getElementById('hp').innerText = player.hp;
+    document.getElementById('max-hp').innerText = player.maxHp;
     document.getElementById('mana').innerText = player.mana;
+    document.getElementById('atk').innerText = player.atk; // Mostra ataque base
     document.getElementById('raca').innerText = player.raca.Nome || "Viajante";
     document.getElementById('vilao').innerText = player.vilao.Nome || "Desconhecido";
     
@@ -97,50 +118,139 @@ function atualizarUI() {
     lista.innerHTML = player.inv.length ? "" : "<li>(Vazio)</li>";
     player.inv.forEach(item => {
         let li = document.createElement('li');
-        li.innerText = `📦 ${item.Nome}`;
+        li.innerText = `📦 ${item.Nome}`; // Exibe nome do item
         lista.appendChild(li);
     });
+
+    // Se HP chegar a 0
+    if (player.hp <= 0) {
+        alert("GAME OVER! A escuridão te consumiu.");
+        location.reload(); // Reinicia o jogo
+    }
 }
 
-// Essa função conecta o Clique -> Custo -> Loot -> Próxima Cena
 function processarEscolha(textoOpcao, evento) {
-    // 1. Verifica Custo de Mana (Lógica Anti-Softlock básica)
+    // 1. Custo de Mana
     let custoMana = parseInt(evento.Custo_Mana) || 0;
-    
     if (player.mana < custoMana) {
-        alert(`Você precisa de ${custoMana} de Mana para fazer isso!`);
-        return; // Cancela a ação
+        alert("Mana insuficiente!");
+        return;
     }
-
-    // 2. Desconta recurso
     player.mana -= custoMana;
-    
-    // 3. Sistema de Loot (Baseado na sua Tabela_Drop)
-    // Aqui simulamos uma chance fixa de 30% de achar algo ao agir
-    if (Math.random() > 0.7) { 
-        ganharLoot(); 
+
+    // 2. Memória (Flag) - Se o evento tiver ID, salvamos que ele já ocorreu
+    if(evento.ID) player.flags[evento.ID] = true;
+
+    // 3. Combate ou Loot?
+    // Se o texto da opção for "Atacar", iniciamos combate (Lógica simples para teste)
+    if (textoOpcao.includes("Atacar") || textoOpcao.includes("Lutar")) {
+        iniciarCombate(player.vilao.Estilo_Capanga); // Usa o capanga do vilão atual
+        return; // Sai da função normal e entra no modo combate
     }
 
+    // 4. Loot Padrão
+    if (Math.random() > 0.6) ganharLoot();
+
+    log(`Você escolheu: ${textoOpcao}`);
     atualizarUI();
-    proximaCena(`Você decidiu: ${textoOpcao}`);
+    proximaCena(`Ação realizada: ${textoOpcao}`);
+}
+
+function iniciarCombate(nomeInimigo) {
+    combatState.active = true;
+    combatState.enemy = { nome: nomeInimigo, hp: 30, atk: 4 }; // Valores base para teste
+    
+    document.getElementById('combat-screen').style.display = 'block';
+    document.getElementById('enemy-name').innerText = nomeInimigo;
+    document.getElementById('enemy-hp').innerText = combatState.enemy.hp;
+    document.getElementById('combat-log').innerText = "Um inimigo hostil apareceu!";
+    
+    // Muda a interface para botões de combate
+    gerarBotoesCombate();
+}
+
+function turnoCombate(acao) {
+    let logMsg = "";
+    
+    // Turno do Jogador
+    if (acao === 'ataque') {
+        let dano = player.atk + Math.floor(Math.random() * 3); // Dano variável
+        combatState.enemy.hp -= dano;
+        logMsg = `Você causou ${dano} de dano!`;
+    }
+
+    // Verifica Vitória
+    if (combatState.enemy.hp <= 0) {
+        combatState.active = false;
+        document.getElementById('combat-screen').style.display = 'none';
+        ganharLoot(); // Recompensa
+        log("Vitória! Inimigo derrotado.");
+        proximaCena("O inimigo caiu diante de você.");
+        return;
+    }
+
+    // Turno do Inimigo
+    let danoInimigo = combatState.enemy.atk;
+    player.hp -= danoInimigo;
+    logMsg += ` O inimigo revidou com ${danoInimigo} de dano!`;
+
+    // Atualiza Tela de Combate
+    document.getElementById('enemy-hp').innerText = combatState.enemy.hp;
+    document.getElementById('combat-log').innerText = logMsg;
+    atualizarUI();
+}
+
+function gerarBotoesCombate() {
+    const area = document.getElementById('opcoes-area');
+    area.innerHTML = "";
+
+    const btnAtk = document.createElement("button");
+    btnAtk.className = "btn";
+    btnAtk.innerText = "⚔️ Atacar com Arma";
+    btnAtk.onclick = () => turnoCombate('ataque');
+    area.appendChild(btnAtk);
+
+    const btnFugir = document.createElement("button");
+    btnFugir.className = "btn";
+    btnFugir.innerText = "🏃 Tentar Fugir";
+    btnFugir.onclick = () => {
+        if(Math.random() > 0.5) {
+            combatState.active = false;
+            document.getElementById('combat-screen').style.display = 'none';
+            proximaCena("Você escapou por pouco!");
+        } else {
+            document.getElementById('combat-log').innerText = "Fuga falhou! Inimigo atacou.";
+            turnoCombate('nada'); // Passa turno e apanha
+        }
+    };
+    area.appendChild(btnFugir);
 }
 
 function ganharLoot() {
-    // Pega um item aleatório da aba ITENS
-    // (Futuramente podemos cruzar com a Tabela_Drop real)
     const itemSorteado = DB.ITENS[Math.floor(Math.random() * DB.ITENS.length)];
     if (itemSorteado) {
         player.inv.push(itemSorteado);
-        alert(`✨ Sorte! Você encontrou: ${itemSorteado.Nome}!`);
+        // Se for arma, aumenta ataque (Lógica simples)
+        if(itemSorteado.Tipo === "Arma") player.atk += parseInt(itemSorteado.Dano || 2);
+        log(`Item obtido: ${itemSorteado.Nome}`);
+        alert(`Você encontrou: ${itemSorteado.Nome}!`);
     }
 }
 
 function proximaCena(textoExtra = "") {
-    const evento = DB.EVENTOS[Math.floor(Math.random() * DB.EVENTOS.length)];
-    const capanga = player.vilao.Estilo_Capanga || "inimigo";
+    let evento;
+    let tentativas = 0;
     
-    // Substituição Procedural
+    // Lógica de Memória: Tenta achar um evento que não aconteceu ainda
+    do {
+        evento = DB.EVENTOS[Math.floor(Math.random() * DB.EVENTOS.length)];
+        tentativas++;
+    } while (player.flags[evento.ID] && tentativas < 10); // Evita loop infinito se tudo já aconteceu
+
+    const capanga = player.vilao.Estilo_Capanga || "Inimigo";
     let narrativa = evento.Texto_Base.replace("[Capanga]", capanga);
+    
+    document.getElementById('titulo-cena').innerText = "O que você faz?";
     document.getElementById('texto-narrativo').innerText = (textoExtra ? textoExtra + "\n\n" : "") + narrativa;
 
     const area = document.getElementById('opcoes-area');
@@ -150,21 +260,21 @@ function proximaCena(textoExtra = "") {
         if(evento[opt]) {
             const btn = document.createElement("button");
             btn.className = "btn";
-            
-            // Exibe o custo no botão se houver
             let custo = parseInt(evento.Custo_Mana) || 0;
-            btn.innerText = evento[opt] + (custo > 0 ? ` (💧 -${custo} Mana)` : "");
+            btn.innerText = evento[opt] + (custo > 0 ? ` (💧 -${custo})` : "");
             
-            // CORREÇÃO CRUCIAL AQUI:
-            // Agora o botão chama processarEscolha, passando a opção e o evento inteiro
+            // Lógica para desabilitar se não tiver mana
+            if (custo > 0 && player.mana < custo) {
+                btn.disabled = true;
+                btn.innerText += " [Mana Insuficiente]";
+            }
+
             btn.onclick = () => processarEscolha(evento[opt], evento);
-            
             area.appendChild(btn);
         }
     });
 }
 
-// Inicia tudo
 carregarDados();
 </script>
 </body>
