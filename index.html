@@ -5,45 +5,39 @@
     <title>Eldoria: Crônicas de Sangue</title>
     <style>
         :root { --bg: #050505; --panel: #111; --accent: #ffcc00; --danger: #ff4444; --success: #2ecc71; }
-        body { background: var(--bg); color: #eee; font-family: 'Cinzel', serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        body { background: var(--bg); color: #eee; font-family: 'Segoe UI', serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        /* ANIMAÇÕES */
         @keyframes shake { 0% { transform: translate(1px, 1px); } 20% { transform: translate(-3px, 0px); } 40% { transform: translate(3px, 2px); } 100% { transform: translate(0,0); } }
         .shake { animation: shake 0.5s; }
         
-        #game-container { display: flex; width: 100%; }
+        #game-container { display: flex; width: 100%; visibility: hidden; }
         #main-stage { flex: 3; padding: 20px; display: flex; flex-direction: column; align-items: center; position: relative; }
         
-        /* IMAGEM REAL */
-        #scene-image { width: 90%; height: 400px; object-fit: cover; border: 2px solid #333; border-radius: 5px; box-shadow: 0 0 20px #000; }
+        #scene-image { width: 90%; height: 400px; object-fit: cover; border: 2px solid #333; border-radius: 5px; box-shadow: 0 0 20px #000; background: #222; }
 
-        /* MENSAGEM DE IMPACTO */
-        #impact-overlay { position: absolute; top: 40%; font-size: 3em; font-weight: bold; text-shadow: 0 0 10px #000; display: none; z-index: 100; pointer-events: none; }
+        #impact-overlay { position: absolute; top: 40%; font-size: 4em; font-weight: bold; text-shadow: 0 0 15px #000; display: none; z-index: 100; pointer-events: none; text-align: center; width: 100%; }
 
-        /* NARRATIVA */
-        #narrative-box { width: 90%; background: rgba(20,20,20,0.9); padding: 20px; border-radius: 5px; margin-top: -50px; border-top: 2px solid var(--accent); z-index: 10; }
+        #narrative-box { width: 90%; background: rgba(20,20,20,0.95); padding: 20px; border-radius: 5px; margin-top: -50px; border-top: 2px solid var(--accent); z-index: 10; box-shadow: 0 -10px 20px rgba(0,0,0,0.5); }
         .choices-grid { display: grid; grid-template-columns: 1fr; width: 90%; margin-top: 15px; }
-        .btn { background: #1a1a1a; color: #fff; border: 1px solid #444; padding: 15px; margin: 5px; cursor: pointer; transition: 0.3s; text-align: left; }
-        .btn:hover { background: #333; border-color: var(--accent); }
+        .btn { background: #1a1a1a; color: #fff; border: 1px solid #444; padding: 18px; margin: 5px; cursor: pointer; transition: 0.3s; text-align: left; font-size: 1.1em; border-radius: 4px; }
+        .btn:hover { background: #333; border-color: var(--accent); padding-left: 25px; }
 
-        /* SIDEBAR */
-        #sidebar { flex: 1; background: var(--panel); border-left: 2px solid #222; padding: 20px; display: flex; flex-direction: column; }
-        .stat-row { display: flex; justify-content: space-between; border-bottom: 1px solid #222; padding: 8px 0; }
+        #sidebar { flex: 1; background: var(--panel); border-left: 2px solid #222; padding: 20px; display: flex; flex-direction: column; box-shadow: -5px 0 15px rgba(0,0,0,0.5); }
+        .stat-row { display: flex; justify-content: space-between; border-bottom: 1px solid #222; padding: 10px 0; font-size: 1.1em; }
         
-        /* INVENTÁRIO */
-        #inventory-list { flex: 1; overflow-y: auto; margin-top: 10px; }
-        .inv-item { background: #222; padding: 10px; margin-bottom: 5px; border-radius: 3px; font-size: 0.9em; display: flex; justify-content: space-between; }
-        .equip-btn { background: var(--accent); color: #000; border: none; padding: 3px 8px; border-radius: 2px; cursor: pointer; }
+        #inventory-list { flex: 1; overflow-y: auto; margin-top: 15px; border-top: 1px solid #333; padding-top: 10px; }
+        .inv-item { background: #1a1a1a; padding: 12px; margin-bottom: 8px; border-radius: 4px; font-size: 0.95em; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; }
+        .equip-btn { background: var(--accent); color: #000; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-weight: bold; }
+        .equip-btn:hover { background: #ffdb4d; }
 
-        /* SHOP */
-        #shop-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; padding: 50px; }
+        #game-log { height: 180px; overflow-y: auto; font-size: 0.9em; color: #888; margin-top: auto; border-top: 1px solid #333; padding-top: 10px; font-family: monospace; }
     </style>
 </head>
 <body>
 
     <div id="menu-screen" style="position:fixed; inset:0; background:#000; z-index:2000; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-        <h1 style="color:var(--accent); font-size:4em;">ELDORIA</h1>
-        <button onclick="Game.init()" style="padding:20px 50px; font-size:1.5em; background:var(--accent); cursor:pointer;">INICIAR JORNADA</button>
+        <h1 style="color:var(--accent); font-size:5em; letter-spacing: 10px; margin-bottom: 20px;">ELDORIA</h1>
+        <button onclick="Game.init()" style="padding:20px 60px; font-size:1.8em; background:var(--accent); cursor:pointer; border: none; font-weight: bold; border-radius: 5px; box-shadow: 0 0 20px rgba(255, 204, 0, 0.3);">INICIAR JORNADA</button>
     </div>
 
     <div id="impact-overlay"></div>
@@ -52,34 +46,31 @@
         <div id="main-stage">
             <img id="scene-image" src="" alt="Cena">
             <div id="narrative-box">
-                <h2 id="scene-title" style="margin:0; color:var(--accent)">Aguardando...</h2>
-                <p id="scene-text" style="line-height:1.6; font-size:1.1em;"></p>
+                <h2 id="scene-title" style="margin:0; color:var(--accent); text-transform: uppercase;">Aguardando...</h2>
+                <p id="scene-text" style="line-height:1.6; font-size:1.2em; color: #ccc;"></p>
             </div>
             <div id="choices-grid" class="choices-grid"></div>
         </div>
 
         <div id="sidebar">
-            <h3 style="border-bottom:1px solid var(--accent)">HERÓI</h3>
-            <div class="stat-row"><span>❤️ Vida</span> <span id="ui-hp">100/100</span></div>
-            <div class="stat-row"><span>✨ Mana</span> <span id="ui-mana">50</span></div>
-            <div class="stat-row"><span>⚔️ Ataque</span> <span id="ui-atk">5</span></div>
+            <h3 style="border-bottom:2px solid var(--accent); padding-bottom: 10px; margin-top: 0;">HERÓI</h3>
+            <div class="stat-row"><span>❤️ Vida</span> <span id="ui-hp" style="color: var(--danger); font-weight: bold;">-</span></div>
+            <div class="stat-row"><span>✨ Mana</span> <span id="ui-mana" style="color: #4db8ff;">-</span></div>
+            <div class="stat-row"><span>⚔️ Ataque</span> <span id="ui-atk" style="color: var(--accent); font-weight: bold;">-</span></div>
             <div class="stat-row"><span>💰 Ouro</span> <span id="ui-gold" style="color:gold">50</span></div>
             <div class="stat-row"><span>🧬 Missão</span> <span id="ui-quest" style="color:var(--accent)">Prólogo</span></div>
             
-            <h3 style="margin-top:20px;">🎒 INVENTÁRIO</h3>
+            <h3 style="margin-top:25px; margin-bottom: 10px;">🎒 INVENTÁRIO</h3>
             <div id="inventory-list"></div>
             
-            <div id="game-log" style="height:150px; overflow-y:auto; font-size:0.8em; color:#666; margin-top:auto; border-top:1px solid #333; padding-top:10px;"></div>
+            <div id="game-log"></div>
         </div>
     </div>
 
 <script>
-// LINKS DA PLANILHA (Mantenha os mesmos)
 const SHEETS = {
     EVENTOS: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQYBgyb8dCSFIKTq84xLLYow8OXHiYph-PP-nb_8CsLJodJz38rZiFM4mB6FPCoiw1zDPjoFaH9Ju_6/pub?gid=1744997815&single=true&output=csv",
-    ITENS: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQYBgyb8dCSFIKTq84xLLYow8OXHiYph-PP-nb_8CsLJodJz38rZiFM4mB6FPCoiw1zDPjoFaH9Ju_6/pub?gid=1410748440&single=true&output=csv",
-    RACAS: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQYBgyb8dCSFIKTq84xLLYow8OXHiYph-PP-nb_8CsLJodJz38rZiFM4mB6FPCoiw1zDPjoFaH9Ju_6/pub?gid=295311780&single=true&output=csv",
-    VILOES: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQYBgyb8dCSFIKTq84xLLYow8OXHiYph-PP-nb_8CsLJodJz38rZiFM4mB6FPCoiw1zDPjoFaH9Ju_6/pub?gid=530389116&single=true&output=csv"
+    ITENS: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQYBgyb8dCSFIKTq84xLLYow8OXHiYph-PP-nb_8CsLJodJz38rZiFM4mB6FPCoiw1zDPjoFaH9Ju_6/pub?gid=1410748440&single=true&output=csv"
 };
 
 let DB = {};
@@ -90,15 +81,25 @@ let player = {
 
 const Game = {
     init: async () => {
-        document.getElementById('menu-screen').style.display = 'none';
-        const load = async (url) => {
-            const r = await fetch(url);
-            const t = await r.text();
-            return Game.parseCSV(t);
-        };
-        DB.EVENTOS = await load(SHEETS.EVENTOS);
-        DB.ITENS = await load(SHEETS.ITENS);
-        Game.renderScene();
+        try {
+            const load = async (url) => {
+                const r = await fetch(url);
+                if (!r.ok) throw new Error("Erro de rede");
+                const t = await r.text();
+                return Game.parseCSV(t);
+            };
+            
+            DB.EVENTOS = await load(SHEETS.EVENTOS);
+            DB.ITENS = await load(SHEETS.ITENS);
+            
+            document.getElementById('menu-screen').style.display = 'none';
+            document.getElementById('game-container').style.visibility = 'visible';
+            
+            Game.renderScene();
+        } catch (error) {
+            alert("Erro ao carregar os dados. Verifique sua planilha e conexão.");
+            console.error(error);
+        }
     },
 
     parseCSV: (t) => {
@@ -119,16 +120,18 @@ const Game = {
     },
 
     renderScene: () => {
-        // Busca o evento específico ou sorteia um se não houver sequência
         let ev = DB.EVENTOS.find(e => e.id === player.nextEventId);
         if(!ev) ev = DB.EVENTOS[Math.floor(Math.random() * DB.EVENTOS.length)];
 
-        // Imagens do Unsplash (Paisagens reais)
-        const kw = ev.keyword_imagem || "fantasy,forest";
-        document.getElementById('scene-image').src = `https://source.unsplash.com/featured/800x450/?${kw}`;
+        // Imagens do Unsplash Estáveis
+        const kw = ev.keyword_imagem || "medieval,fantasy";
+        document.getElementById('scene-image').src = `https://images.unsplash.com/photo-1519074063912-ad25b5ceb59f?q=80&w=800&auto=format&fit=crop`; // Imagem fallback ou baseada em kw
+        if(ev.keyword_imagem) {
+             document.getElementById('scene-image').src = `https://loremflickr.com/800/450/${kw},fantasy`;
+        }
         
-        document.getElementById('scene-title').innerText = ev.titulo;
-        document.getElementById('scene-text').innerText = ev.texto_base;
+        document.getElementById('scene-title').innerText = ev.titulo || "Evento Desconhecido";
+        document.getElementById('scene-text').innerText = ev.texto_base || "O silêncio ecoa pela estrada...";
         
         const grid = document.getElementById('choices-grid');
         grid.innerHTML = "";
@@ -146,45 +149,46 @@ const Game = {
     },
 
     resolve: (ev, optKey, idx) => {
-        // idx é o índice do botão (0 para Opção 1, 1 para Opção 2, 2 para Opção 3)
         const dc = parseInt(ev.dificuldade) || 0;
         const roll = Math.floor(Math.random() * 20) + 1;
         
-        // Se for a primeira opção, faz o teste de DC. As outras são livres ou automáticas.
-        const success = (idx !== 0 || ev.teste_atributo === "Nenhum") ? true : roll >= dc;
+        // Se houver teste de atributo e for a primeira opção
+        const success = (idx !== 0 || !ev.teste_atributo || ev.teste_atributo === "Nenhum") ? true : roll >= dc;
 
         if (success) {
             Game.showImpact("SUCESSO", "var(--success)");
+            UI.log(`Rolagem: ${roll} (DC: ${dc}) - Sucesso!`);
+            const nextKey = `id_proximo_${idx + 1}`;
+            player.nextEventId = ev[nextKey] || ""; 
             
-            // LÓGICA DE RAMIFICAÇÃO:
-            // Busca a coluna id_proximo_1, id_proximo_2 ou id_proximo_3
-            const nextColumn = `id_proximo_${idx + 1}`;
-            player.nextEventId = ev[nextColumn] || ""; 
-            
-            // Recompensa padrão se houver
             if(ev.sucesso_recompensa && ev.sucesso_recompensa.toLowerCase().includes("item")) Loot.get();
         } else {
             Game.showImpact("FALHA", "var(--danger)");
+            UI.log(`Rolagem: ${roll} (DC: ${dc}) - Falha!`);
+            document.body.classList.add('shake');
+            setTimeout(() => document.body.classList.remove('shake'), 500);
             player.hp -= 15;
-            // Se falhar na missão principal, ele perde o rastro e volta pro aleatório
             player.nextEventId = ""; 
         }
 
         UI.update();
-        // Pequeno delay para o jogador ver o impacto (Sucesso/Falha) antes de trocar a cena
-        setTimeout(() => Game.renderScene(), 1200);
-    }
-
-        if(player.hp <= 0) alert("Morte...");
-        Game.renderScene();
+        
+        if(player.hp <= 0) {
+            alert("A morte te abraçou... Sua jornada termina aqui.");
+            location.reload();
+        } else {
+            setTimeout(() => Game.renderScene(), 1200);
+        }
     }
 };
 
 const Loot = {
     get: () => {
         const item = DB.ITENS[Math.floor(Math.random() * DB.ITENS.length)];
-        player.inventory.push(item);
-        UI.log(`Achou: ${item.nome}`);
+        if(item) {
+            player.inventory.push(item);
+            UI.log(`Item obtido: ${item.nome}`, "success");
+        }
     }
 };
 
@@ -200,7 +204,7 @@ const UI = {
             const div = document.createElement('div');
             div.className = "inv-item";
             div.innerHTML = `<span>${item.nome}</span>`;
-            if(item.tipo === "Arma") {
+            if(item.tipo && item.tipo.toLowerCase().includes("arma")) {
                 const b = document.createElement('button');
                 b.className = "equip-btn";
                 b.innerText = player.equipped === item ? "Equipado" : "Equipar";
@@ -210,17 +214,14 @@ const UI = {
             inv.appendChild(div);
         });
         
-        // Atualiza Ataque
-        const bonus = player.equipped ? parseInt(player.equipped.dano) : 0;
+        const bonus = player.equipped ? (parseInt(player.equipped.dano) || 0) : 0;
         document.getElementById('ui-atk').innerText = 5 + bonus;
     },
     log: (m) => {
         const log = document.getElementById('game-log');
-        log.innerHTML = `> ${m}<br>` + log.innerHTML;
+        log.innerHTML = `<div style="margin-bottom: 5px;">> ${m}</div>` + log.innerHTML;
     }
 };
 </script>
 </body>
 </html>
-
-
