@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>RPG Procedural - Edição Épica</title>
+    <title>RPG Procedural - Edição Definitiva</title>
     <style>
         body { background: #050505; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; display: flex; margin: 0; height: 100vh; overflow: hidden; }
         
@@ -20,18 +20,22 @@
         #game { flex: 3; padding: 30px; display: flex; flex-direction: column; position: relative; }
         #sidebar { flex: 1; background: #111; padding: 20px; border-left: 1px solid #333; overflow-y: auto; display: flex; flex-direction: column; }
         
-        /* IMAGEM DO EVENTO */
+        /* IMAGEM E UI */
         #scene-image { width: 100%; height: 300px; object-fit: cover; border-radius: 8px; border: 1px solid #444; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); background: #222; transition: opacity 0.5s; }
         
         .btn { background: #222; color: #ccc; border: 1px solid #444; padding: 18px; margin: 8px 0; cursor: pointer; border-radius: 5px; text-align: left; font-size: 16px; transition: 0.2s; position: relative; overflow: hidden; }
         .btn:hover:not(:disabled) { background: #333; border-color: #ffcc00; color: #fff; padding-left: 25px; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+        /* COMBATE UI */
+        #combat-ui { display: none; background: #2a0a0a; padding: 15px; border: 1px solid #ff4444; border-radius: 8px; margin-bottom: 20px; animation: pulseRed 2s infinite; }
+        @keyframes pulseRed { 0% { box-shadow: 0 0 5px #500; } 50% { box-shadow: 0 0 20px #500; } 100% { box-shadow: 0 0 5px #500; } }
+        .combat-stat { font-size: 1.2em; font-weight: bold; color: #ff5555; }
+
         /* INVENTÁRIO */
         .item-row { display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; padding: 8px; margin-bottom: 5px; border-radius: 4px; border: 1px solid #333; font-size: 0.9em; }
         .equip-btn { background: #333; color: #fff; border: none; padding: 4px 8px; cursor: pointer; font-size: 0.8em; border-radius: 3px; }
         .equip-btn:hover { background: #ffcc00; color: #000; }
-        .equipped-badge { color: #4caf50; font-weight: bold; font-size: 0.8em; }
 
         /* STATS */
         .stat-row { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px solid #222; padding-bottom: 5px; }
@@ -42,7 +46,7 @@
 
     <div id="menu-screen">
         <div class="menu-box">
-            <h1 style="color: #fff; margin: 0 0 20px 0; text-transform: uppercase; letter-spacing: 2px;">Crônicas de Natal</h1>
+            <h1 style="color: #fff; margin: 0 0 20px 0; text-transform: uppercase; letter-spacing: 2px;">RPG PROCEDURAL</h1>
             <div id="loading-msg" style="color: #ffcc00; font-size: 0.9em;">Baixando dados do servidor...</div>
             
             <div id="character-creation" style="display: none;">
@@ -70,6 +74,16 @@
     <div id="game-container">
         <div id="game">
             <img id="scene-image" src="" alt="Cena do Jogo">
+            
+            <div id="combat-ui">
+                <h3 style="margin:0; color:#ff5555">⚔️ COMBATE INICIADO!</h3>
+                <p>Inimigo: <span id="enemy-name" style="color:white">Monstro</span></p>
+                <div style="background:#400; height:10px; width:100%; border-radius:5px; margin-top:5px;">
+                    <div id="enemy-hp-bar" style="background:#f00; height:100%; width:100%; border-radius:5px; transition:0.3s"></div>
+                </div>
+                <p style="text-align:right; margin:5px 0 0 0; font-size:0.8em">HP Inimigo: <span id="enemy-hp-val">100</span>%</p>
+            </div>
+
             <div id="texto-narrativo" style="font-size: 1.1em; line-height: 1.6; margin-bottom: 20px; color: #ccc;"></div>
             <div id="opcoes-area" style="display: flex; flex-direction: column;"></div>
         </div>
@@ -79,10 +93,9 @@
             
             <div class="stat-row"><span style="color:#aaa">❤️ Vida</span> <span class="stat-val"><span id="hp"></span>/<span id="max-hp"></span></span></div>
             <div class="stat-row"><span style="color:#aaa">✨ Mana</span> <span id="mana" class="stat-val"></span></div>
-            <div class="stat-row"><span style="color:#aaa">⚔️ Ataque</span> <span class="stat-val"><span id="atk"></span> <span id="bonus-atk" style="color:#4caf50; font-size:0.8em;"></span></span></div>
-            <div class="stat-row"><span style="color:#aaa">🛡️ Defesa</span> <span id="def" class="stat-val">0</span></div>
+            <div class="stat-row"><span style="color:#aaa">⚔️ Ataque Total</span> <span id="atk-total" class="stat-val"></span></div>
             
-            <div style="margin-top: 20px; margin-bottom: 10px; font-weight: bold; color: #fff;">⚔️ Equipamento</div>
+            <div style="margin-top: 20px; margin-bottom: 10px; font-weight: bold; color: #fff;">⚔️ Equipado</div>
             <div id="slot-mao" style="color: #888; font-size: 0.9em; margin-bottom: 20px;">Mão: (Vazio)</div>
 
             <div style="margin-bottom: 10px; font-weight: bold; color: #fff;">🎒 Mochila</div>
@@ -93,7 +106,7 @@
     </div>
 
 <script>
-// --- LINKS (MANTENHA OS SEUS AQUI) ---
+// --- LINKS ---
 const LINKS_SISTEMA = {
     VILOES: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSXmWaCWAZyq4Sj5PVfQCYZRCucsYXU9rWGsxyiMS_IdYnmvf80Y_LCePmBwGCUqtpvdsKE61xO0CJ2/pub?gid=0&single=true&output=csv",
     RACAS: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSXmWaCWAZyq4Sj5PVfQCYZRCucsYXU9rWGsxyiMS_IdYnmvf80Y_LCePmBwGCUqtpvdsKE61xO0CJ2/pub?gid=1264466421&single=true&output=csv",
@@ -104,10 +117,11 @@ const LINKS_SISTEMA = {
 
 let DB = {};
 let player = { 
-    nome: "", hp: 100, maxHp: 100, mana: 50, atk: 5, def: 0,
+    nome: "", hp: 100, maxHp: 100, mana: 50, atk: 5, 
     raca: null, vilao: null, inv: [], flags: {},
     equipamento: { mao: null }
 };
+let combat = { active: false, enemy: null };
 
 // --- FUNÇÕES TÉCNICAS ---
 function parseCSV(text) {
@@ -148,7 +162,6 @@ function iniciarJogo() {
     player.raca = DB.RACAS[document.getElementById('select-raca').value];
     const classe = document.getElementById('select-classe').value;
 
-    // Balanceamento inicial
     if (classe === 'guerreiro') { player.maxHp = 120; player.atk = 8; }
     if (classe === 'mago') { player.mana = 100; player.atk = 4; }
     
@@ -168,18 +181,18 @@ function atualizarUI() {
     document.getElementById('hp').innerText = player.hp;
     document.getElementById('max-hp').innerText = player.maxHp;
     document.getElementById('mana').innerText = player.mana;
-    document.getElementById('atk').innerText = player.atk;
-    document.getElementById('def').innerText = player.def;
-
-    // Renderiza Equipamento
-    const bonusAtk = player.equipamento.mao ? parseInt(player.equipamento.mao.Dano || 0) : 0;
-    document.getElementById('bonus-atk').innerText = bonusAtk > 0 ? `(+${bonusAtk})` : "";
-    document.getElementById('slot-mao').innerText = player.equipamento.mao ? `⚔️ ${player.equipamento.mao.Nome}` : "Mão: (Desarmado)";
     
-    // Renderiza Inventário com Botões
+    // Cálculo de Ataque Total (Base + Arma)
+    const weaponDmg = player.equipamento.mao ? parseInt(player.equipamento.mao.Dano || 0) : 0;
+    const totalAtk = parseInt(player.atk) + weaponDmg;
+    document.getElementById('atk-total').innerText = `${totalAtk} (${player.atk}+${weaponDmg})`;
+
+    // UI de Equipamento
+    document.getElementById('slot-mao').innerText = player.equipamento.mao ? `⚔️ ${player.equipamento.mao.Nome} (+${weaponDmg} Dano)` : "Mão: (Desarmado)";
+    
+    // UI de Inventário
     const lista = document.getElementById('inventario-lista');
     lista.innerHTML = "";
-    
     if (player.inv.length === 0) lista.innerHTML = "<div style='color:#444; font-style:italic; font-size:0.8em'>Vazio</div>";
 
     player.inv.forEach((item, index) => {
@@ -187,16 +200,13 @@ function atualizarUI() {
         div.className = "item-row";
         div.innerHTML = `<span>${item.Nome}</span>`;
 
-        // Botão de Equipar (Se for Arma)
         if (item.Tipo === "Arma") {
             const btn = document.createElement('button');
             btn.className = "equip-btn";
             btn.innerText = "Equipar";
             btn.onclick = () => equiparItem(index);
             div.appendChild(btn);
-        }
-        // Botão de Usar (Se for Consumível)
-        else if (item.Tipo === "Pocao" || item.Tipo === "Consumivel") {
+        } else if (item.Tipo === "Pocao" || item.Tipo === "Consumivel") {
             const btn = document.createElement('button');
             btn.className = "equip-btn";
             btn.innerText = "Usar";
@@ -204,37 +214,27 @@ function atualizarUI() {
             btn.onclick = () => usarItem(index);
             div.appendChild(btn);
         }
-
         lista.appendChild(div);
     });
 }
 
+// --- ITENS ---
 function equiparItem(index) {
     const item = player.inv[index];
-    // Se já tiver algo equipado, devolve pra mochila
-    if (player.equipamento.mao) {
-        player.inv.push(player.equipamento.mao);
-    }
-    // Equipa o novo e remove da mochila
+    if (player.equipamento.mao) player.inv.push(player.equipamento.mao);
     player.equipamento.mao = item;
     player.inv.splice(index, 1);
-    
-    log(`Você equipou: ${item.Nome}`);
+    log(`Você empunhou: ${item.Nome}`);
     atualizarUI();
 }
 
 function usarItem(index) {
     const item = player.inv[index];
-    // Lógica simples de poção
     if (item.Nome.includes("Vida")) {
         player.hp = Math.min(player.hp + 20, player.maxHp);
-        log("Você recuperou 20 de Vida!");
-    } else if (item.Nome.includes("Mana")) {
-        player.mana += 20;
-        log("Você recuperou 20 de Mana!");
+        log("Você bebeu uma poção e recuperou vida.");
     }
-    
-    player.inv.splice(index, 1); // Consome o item
+    player.inv.splice(index, 1);
     atualizarUI();
 }
 
@@ -243,9 +243,11 @@ function log(msg) {
     logDiv.innerHTML = `> ${msg}<br>` + logDiv.innerHTML;
 }
 
-// --- NARRATIVA E EVENTOS ---
+// --- MOTOR DE NARRATIVA E COMBATE ---
 
 function proximaCena(textoExtra = "") {
+    if (combat.active) return; // Não gera cena nova se estiver em combate
+
     let evento;
     let tentativas = 0;
     do {
@@ -253,8 +255,7 @@ function proximaCena(textoExtra = "") {
         tentativas++;
     } while (player.flags[evento.ID] && tentativas < 15);
 
-    // SISTEMA DE IMAGEM IA
-    // Se não tiver Keyword na planilha, usa 'fantasy landscape' padrão
+    // Gera Imagem
     const keyword = evento.Keyword_Imagem || "fantasy landscape";
     const imgUrl = `https://image.pollinations.ai/prompt/dark fantasy painting of ${keyword}?width=600&height=300&nologo=true&seed=${Math.random()}`;
     document.getElementById('scene-image').src = imgUrl;
@@ -274,9 +275,7 @@ function proximaCena(textoExtra = "") {
             let custo = parseInt(evento.Custo_Mana) || 0;
             btn.innerText = evento[opt] + (custo > 0 ? ` (✨ -${custo} Mana)` : "");
             
-            if (custo > 0 && player.mana < custo) {
-                btn.disabled = true;
-            }
+            if (custo > 0 && player.mana < custo) btn.disabled = true;
 
             btn.onclick = () => processarEscolha(evento[opt], evento);
             area.appendChild(btn);
@@ -285,21 +284,130 @@ function proximaCena(textoExtra = "") {
 }
 
 function processarEscolha(textoOpcao, evento) {
+    // 1. Processa Custo
     let custoMana = parseInt(evento.Custo_Mana) || 0;
     player.mana -= custoMana;
     if(evento.ID) player.flags[evento.ID] = true;
 
-    // Drop System
-    if (Math.random() > 0.6) {
-        const item = DB.ITENS[Math.floor(Math.random() * DB.ITENS.length)];
-        if(item) {
-            player.inv.push(item);
-            log(`Encontrou: ${item.Nome}`);
-        }
+    // 2. Verifica se é Combate (Pela palavra 'Atacar' ou 'Lutar')
+    if (textoOpcao.includes("Atacar") || textoOpcao.includes("Lutar") || textoOpcao.includes("Combater")) {
+        const nomeInimigo = player.vilao ? player.vilao.Estilo_Capanga : "Monstro";
+        iniciarCombate(nomeInimigo);
+        return;
     }
+
+    // 3. Drop Simples (Se não for combate)
+    if (Math.random() > 0.7) gerarLoot();
 
     atualizarUI();
     proximaCena(`Decisão: ${textoOpcao}`);
+}
+
+// --- SISTEMA DE COMBATE REAL ---
+
+function iniciarCombate(nomeInimigo) {
+    combat.active = true;
+    combat.enemy = { nome: nomeInimigo, hp: 40, maxHp: 40, atk: 5 }; // Stats do inimigo
+
+    document.getElementById('combat-ui').style.display = 'block';
+    document.getElementById('enemy-name').innerText = nomeInimigo;
+    
+    // Gera imagem do monstro
+    const imgUrl = `https://image.pollinations.ai/prompt/scary ${nomeInimigo} monster rpg style?width=600&height=300&nologo=true&seed=${Math.random()}`;
+    document.getElementById('scene-image').src = imgUrl;
+
+    document.getElementById('texto-narrativo').innerText = `Um ${nomeInimigo} furioso bloqueia seu caminho! Prepare-se para lutar!`;
+    
+    atualizarInterfaceCombate();
+}
+
+function atualizarInterfaceCombate() {
+    // Atualiza Barra de Vida do Inimigo
+    const pct = (combat.enemy.hp / combat.enemy.maxHp) * 100;
+    document.getElementById('enemy-hp-bar').style.width = `${pct}%`;
+    document.getElementById('enemy-hp-val').innerText = Math.floor(pct);
+
+    const area = document.getElementById('opcoes-area');
+    area.innerHTML = "";
+
+    // Botão de Ataque
+    const btnAtk = document.createElement("button");
+    btnAtk.className = "btn";
+    btnAtk.innerText = "⚔️ Atacar com Arma";
+    btnAtk.style.borderColor = "#ff4444";
+    btnAtk.onclick = () => turnoCombate('ataque');
+    area.appendChild(btnAtk);
+
+    // Botão de Fuga
+    const btnFugir = document.createElement("button");
+    btnFugir.className = "btn";
+    btnFugir.innerText = "🏃 Tentar Fugir";
+    btnFugir.onclick = () => turnoCombate('fuga');
+    area.appendChild(btnFugir);
+}
+
+function turnoCombate(acao) {
+    let msg = "";
+
+    // 1. Turno do Jogador
+    if (acao === 'ataque') {
+        const weaponDmg = player.equipamento.mao ? parseInt(player.equipamento.mao.Dano || 0) : 0;
+        const danoPlayer = parseInt(player.atk) + weaponDmg + Math.floor(Math.random() * 3);
+        combat.enemy.hp -= danoPlayer;
+        msg += `Você causou ${danoPlayer} de dano! `;
+        log(`Ataque: ${danoPlayer} de dano.`);
+    } else if (acao === 'fuga') {
+        if (Math.random() > 0.5) {
+            encerrarCombate(false);
+            proximaCena("Você escapou por pouco!");
+            return;
+        } else {
+            msg += "Falha na fuga! ";
+        }
+    }
+
+    // 2. Verifica Morte do Inimigo
+    if (combat.enemy.hp <= 0) {
+        encerrarCombate(true);
+        return;
+    }
+
+    // 3. Turno do Inimigo
+    const danoInimigo = combat.enemy.atk + Math.floor(Math.random() * 2);
+    player.hp -= danoInimigo;
+    msg += `Inimigo atacou e causou ${danoInimigo} de dano.`;
+    log(`Recebeu: ${danoInimigo} de dano.`);
+
+    // 4. Verifica Morte do Jogador
+    if (player.hp <= 0) {
+        alert("GAME OVER! Seu herói caiu em batalha.");
+        location.reload();
+    }
+
+    document.getElementById('texto-narrativo').innerText = msg;
+    atualizarUI();
+    atualizarInterfaceCombate();
+}
+
+function encerrarCombate(vitoria) {
+    combat.active = false;
+    document.getElementById('combat-ui').style.display = 'none';
+    
+    if (vitoria) {
+        log("Inimigo derrotado!");
+        gerarLoot(); // Chance extra de loot por vitória
+        proximaCena("O inimigo caiu. A vitória é sua!");
+    }
+}
+
+function gerarLoot() {
+    const item = DB.ITENS[Math.floor(Math.random() * DB.ITENS.length)];
+    if(item) {
+        player.inv.push(item);
+        log(`Saqueou: ${item.Nome}`);
+        alert(`Você encontrou: ${item.Nome}!`);
+        atualizarUI();
+    }
 }
 
 carregarDados();
