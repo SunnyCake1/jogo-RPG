@@ -146,25 +146,33 @@ const Game = {
     },
 
     resolve: (ev, optKey, idx) => {
+        // idx é o índice do botão (0 para Opção 1, 1 para Opção 2, 2 para Opção 3)
         const dc = parseInt(ev.dificuldade) || 0;
         const roll = Math.floor(Math.random() * 20) + 1;
         
-        // Verifica se o teste de perícia passa
+        // Se for a primeira opção, faz o teste de DC. As outras são livres ou automáticas.
         const success = (idx !== 0 || ev.teste_atributo === "Nenhum") ? true : roll >= dc;
 
         if (success) {
             Game.showImpact("SUCESSO", "var(--success)");
-            // Pega o ID de destino baseado na opção clicada (1, 2 ou 3)
-            const nextKey = `id_proximo_${idx + 1}`;
-            player.nextEventId = ev[nextKey] || ""; 
+            
+            // LÓGICA DE RAMIFICAÇÃO:
+            // Busca a coluna id_proximo_1, id_proximo_2 ou id_proximo_3
+            const nextColumn = `id_proximo_${idx + 1}`;
+            player.nextEventId = ev[nextColumn] || ""; 
+            
+            // Recompensa padrão se houver
+            if(ev.sucesso_recompensa && ev.sucesso_recompensa.toLowerCase().includes("item")) Loot.get();
         } else {
             Game.showImpact("FALHA", "var(--danger)");
             player.hp -= 15;
+            // Se falhar na missão principal, ele perde o rastro e volta pro aleatório
             player.nextEventId = ""; 
         }
 
         UI.update();
-        setTimeout(() => Game.renderScene(), 1000);
+        // Pequeno delay para o jogador ver o impacto (Sucesso/Falha) antes de trocar a cena
+        setTimeout(() => Game.renderScene(), 1200);
     }
 
         if(player.hp <= 0) alert("Morte...");
@@ -214,4 +222,5 @@ const UI = {
 </script>
 </body>
 </html>
+
 
