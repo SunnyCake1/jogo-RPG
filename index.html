@@ -145,22 +145,27 @@ const Game = {
         UI.update();
     },
 
-    resolve: (ev, opt, idx) => {
+    resolve: (ev, optKey, idx) => {
         const dc = parseInt(ev.dificuldade) || 0;
         const roll = Math.floor(Math.random() * 20) + 1;
-        const success = idx !== 0 || roll >= dc; // Opção 1 sempre testa DC se houver
+        
+        // Verifica se o teste de perícia passa
+        const success = (idx !== 0 || ev.teste_atributo === "Nenhum") ? true : roll >= dc;
 
-        if(success) {
+        if (success) {
             Game.showImpact("SUCESSO", "var(--success)");
-            player.nextEventId = ev.id_proximo || ""; // SEGUE A HISTÓRIA
-            if(ev.sucesso_recompensa && ev.sucesso_recompensa.includes("Item")) Loot.get();
+            // Pega o ID de destino baseado na opção clicada (1, 2 ou 3)
+            const nextKey = `id_proximo_${idx + 1}`;
+            player.nextEventId = ev[nextKey] || ""; 
         } else {
             Game.showImpact("FALHA", "var(--danger)");
-            document.body.classList.add('shake');
-            setTimeout(() => document.body.classList.remove('shake'), 500);
             player.hp -= 15;
-            player.nextEventId = ""; // Perde a sequência se falhar? Ou mantenha se preferir
+            player.nextEventId = ""; 
         }
+
+        UI.update();
+        setTimeout(() => Game.renderScene(), 1000);
+    }
 
         if(player.hp <= 0) alert("Morte...");
         Game.renderScene();
@@ -209,3 +214,4 @@ const UI = {
 </script>
 </body>
 </html>
+
